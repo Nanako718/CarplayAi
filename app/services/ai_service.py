@@ -32,26 +32,36 @@ class AIBroadcastService:
         # 规则引擎（降级方案）
         self.rule_engine = BroadcastService()
 
-        # 系统Prompt
-        self.system_prompt = """你是一个温暖贴心的车载AI助手。你的任务是根据用户当前的场景、天气、时间等信息，生成简短、自然、温暖的播报内容。
+        # 系统Prompt - 老友风格（多样版）
+        self.system_prompt = """你是用户的老朋友，像知己一样陪他开车。
 
-要求：
-1. 长度控制在30-50字，适合TTS播放（约15秒）
-2. 语气自然、亲切、温暖，像朋友一样
-3. 结合天气、时间、场景给出实用建议
-4. 如果是深夜回家，表达关心和安慰
-5. 如果是雨天，提醒带伞或注意安全
-6. 避免重复，每次生成不同的表达
-7. 不要使用emoji，纯文本输出
-8. 直接输出播报内容，不要有其他说明"""
+说话要求：
+- 自然随性，开场白要多样化，不要重复
+- 开场白参考（每次选不同的）：
+  * 直接说事：忙完啦？/ 收工啦？/ 终于下班了？/ 今天没加班？
+  * 打招呼：哎 / 哟 / 嘿 / 得嘞 / 哎呦我去
+  * 关心：辛苦啦 / 累坏了吧 / 今天忙不忙？
+  * 天气相关：外面天气不错 / 今天挺凉快 / 雨停了
+- 50字以内，不啰嗦，不用emoji
+- 关心要真诚，像真人聊天
+
+重要限制：
+- 不要猜测用户的具体工作内容（比如：开完会了吧？/ 今天开会累不累？/ 方案写完了吗？）
+- 不要猜测用户去了哪里、做了什么
+- 只关心用户的状态和感受，不问具体事情
+
+场景：早上问候、下班关心、加班心疼、深夜叮嘱、周末愉快、雨天提醒。
+
+输出JSON：{"text":"播报","emotion":"语气"}
+语气：happy/warm/calm/worried/gentle/excited"""
 
         # 场景描述模板
         self.scene_templates = {
             'commute_to_work': '现在是{time}，用户从家出发去上班，天气{weather}，温度{temp_low}°C~{temp_high}°C，降水概率{precip}%。',
             'normal_leave': '现在是{time}，用户从工作地点下班回家，天气{weather}。',
             'overtime_leave': '现在是{time}，用户加班到很晚才下班，天气{weather}。请表达关心和安慰。',
-            'late_night': '现在是{time}，用户深夜还在路上，天气{weather}。请特别关心安全和休息。',
-            'weekend_trip': '现在是{time}，周末出行，天气{weather}，温度{temp_low}°C~{temp_high}°C。',
+            'late_night': '现在是{time}，用户深夜/凌晨还在路上开车，天气{weather}。请特别关心安全，提醒注意休息。',
+            'weekend_trip': '现在是{time}，用户在{location}附近开车，天气{weather}，温度{temp_low}°C~{temp_high}°C。注意：如果是凌晨(0:00-6:00)，重点关心安全和休息。',
             'irregular_departure': '现在是{time}，用户非正常时间出发，天气{weather}。'
         }
 
@@ -60,7 +70,7 @@ class AIBroadcastService:
         user_id: int,
         event: Dict,
         scene: str
-    ) -> Optional[str]:
+    ) -> tuple[Optional[str], str]:
         """
         调用AI生成播报
 
@@ -70,8 +80,7 @@ class AIBroadcastService:
         - scene: 场景类型
 
         返回：
-        - 成功：播报文本
-        - 失败：None（触发降级）
+        - (播报文本, 语气标签) 或 (None, 'warm')
         """
         try:
             # 构建用户消息
@@ -83,15 +92,42 @@ class AIBroadcastService:
                 timeout=self.timeout
             )
 
-            return response
+            if response:
+                # 解析JSON响应
+                text, emotion = self._parse_response(response)
+                return text, emotion
+
+            return None, 'warm'
 
         except asyncio.TimeoutError:
             logger.warning(f"AI调用超时，用户{user_id}，场景{scene}")
-            return None
+            return None, 'warm'
 
         except Exception as e:
             logger.error(f"AI调用失败：{e}")
-            return None
+            return None, 'warm'
+
+    def _parse_response(self, response: str) -> tuple[str, str]:
+        """解析AI响应，提取文本和语气"""
+        import json
+        import re
+
+        try:
+            # 去掉markdown代码块
+            cleaned = response.strip()
+            if cleaned.startswith('```'):
+                # 去掉 ```json 和 ```
+                cleaned = re.sub(r'^```(?:json)?\s*', '', cleaned)
+                cleaned = re.sub(r'\s*```$', '', cleaned)
+
+            # 尝试解析JSON
+            data = json.loads(cleaned)
+            text = data.get('text', response)
+            emotion = data.get('emotion', 'warm')
+            return text, emotion
+        except:
+            # 如果不是JSON格式，直接返回文本
+            return response, 'warm'
 
     def generate_broadcast_with_fallback(
         self,
@@ -159,10 +195,12 @@ class AIBroadcastService:
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": user_message}
                 ],
-                temperature=1.0,  # 提高随机性，增加多样性
+                temperature=1.0,
                 top_p=0.95,
-                max_tokens=200
+                max_tokens=512,  # 减少 token 加快速度
+                extra_body={'thinking': {'type': 'disabled'}}  # 关闭思考模式
             )
         )
 
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        return content.strip() if content else None

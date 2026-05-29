@@ -31,7 +31,8 @@ class TTSService:
     async def synthesize_to_stream(
         self,
         text: str,
-        voice: str = 'default'
+        voice: str = 'default',
+        emotion: str = 'warm'
     ) -> Optional[bytes]:
         """
         文本转语音 - 返回音频二进制数据
@@ -59,6 +60,16 @@ class TTSService:
                 "Connection": "keep-alive"
             }
 
+            # 语气映射
+            emotion_map = {
+                'happy': 'happy',
+                'warm': 'warm',
+                'calm': 'calm',
+                'worried': 'worried',
+                'gentle': 'gentle',
+                'excited': 'excited'
+            }
+
             # 构建请求体
             payload = {
                 "user": {
@@ -69,7 +80,9 @@ class TTSService:
                     "speaker": self.voices.get(voice, self.voices['default']),
                     "audio_params": {
                         "format": "mp3",
-                        "sample_rate": 24000
+                        "sample_rate": 24000,
+                        "emotion": emotion_map.get(emotion, 'warm'),
+                        "emotion_scale": 4
                     }
                 }
             }

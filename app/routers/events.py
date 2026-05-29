@@ -70,8 +70,8 @@ async def create_event(
     ai_service = AIBroadcastService()
     ai_start = time.time()
 
-    # 尝试AI生成
-    broadcast_text = await ai_service.generate_broadcast(
+    # AI生成播报
+    broadcast_text, emotion = await ai_service.generate_broadcast(
         current_user.id,
         {
             'created_at': event.created_at,
@@ -84,36 +84,58 @@ async def create_event(
         scene
     )
 
+    ai_latency = time.time() - ai_start
+    ai_model = "mimo-v2.5-pro"
     is_fallback = False
-    ai_latency = 0
 
-    if broadcast_text:
-        ai_latency = time.time() - ai_start
-    else:
-        # AI失败，降级到规则引擎
-        is_fallback = True
-        from app.services.broadcast_service import BroadcastService
-        rule_engine = BroadcastService()
-        broadcast_text = rule_engine.generate_broadcast(
-            current_user.id,
-            {
-                'created_at': event.created_at,
-                'weather_condition': event.weather_condition,
-                'temperature_high': event.temperature_high,
-                'temperature_low': event.temperature_low,
-                'precipitation_prob': event.precipitation_prob,
-                'address': event.address
-            },
-            scene
+    # AI失败时返回错误
+    if not broadcast_text:
+        return ApiResponse(
+            code=500,
+            message="AI生成失败，请稍后重试",
+            data=None
         )
 
-    # 6. 根据返回类型处理
+    # 6. 保存播报记录
+    from app.models.broadcast import Broadcast
+    broadcast_record = Broadcast(
+        user_id=current_user.id,
+        event_id=event.id,
+        content_text=broadcast_text,
+        scene=scene,
+        ai_model=ai_model,
+        ai_latency=ai_latency,
+        is_fallback=is_fallback
+    )
+    db.add(broadcast_record)
+    db.commit()
+
+    # 7. 记录作息（下车事件时）
+    if event_data.event_type == 'disconnect':
+        from app.services.schedule_service import ScheduleService
+        schedule_service = ScheduleService(db)
+
+        # 根据位置类型记录不同时间
+        is_home = from_location and from_location.location_type == 'home'
+        is_work = from_location and from_location.location_type == 'work'
+
+        schedule_service.record_schedule(
+            user_id=current_user.id,
+            date=event.created_at.date(),
+            depart_time=None,
+            arrive_time=event.created_at if is_work else None,
+            leave_time=event.created_at if is_work else None,
+            return_time=event.created_at if is_home else None,
+            work_location_id=from_location.id if is_work else None
+        )
+
+    # 8. 根据返回类型处理
     total_latency = time.time() - start_time
 
     if response_type == "audio":
         # 生产模式：返回音频流（不存储）
         tts_service = TTSService()
-        audio_data = await tts_service.synthesize_to_stream(broadcast_text)
+        audio_data = await tts_service.synthesize_to_stream(broadcast_text, emotion=emotion)
 
         if audio_data:
             # 直接返回音频流，用完即销毁

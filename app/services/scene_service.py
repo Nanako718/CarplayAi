@@ -51,27 +51,39 @@ class SceneService:
         # 识别位置类型
         location_type = self._get_location_type(user_id, event)
 
-        # 周末场景
-        if is_weekend:
-            return self.WEEKEND_TRIP
-
-        # 深夜场景
-        if hour >= 22 or hour < 5:
+        # 深夜/凌晨场景（优先级最高，不管是不是周末）
+        if hour >= 22 or hour < 6:
             return self.LATE_NIGHT
 
-        # 从家出发
+        # 从家出发 → 上班（不管是不是周末）
         if location_type == 'home' and event.event_type == 'connect':
             if self._is_normal_depart_time(hour, user_schedule):
                 return self.COMMUTE_TO_WORK
             else:
                 return self.IRREGULAR_DEPARTURE
 
-        # 从工作地点出发（下班）
+        # 从工作地点出发 → 下班（不管是不是周末）
         if location_type == 'work' and event.event_type == 'connect':
             if self._is_overtime(hour, user_schedule):
                 return self.OVERTIME_LEAVE
             else:
                 return self.NORMAL_LEAVE
+
+        # 冷启动：没有位置数据时，根据时间判断
+        if location_type == 'unknown':
+            # 早上7-10点 → 可能是上班
+            if 7 <= hour <= 10:
+                return self.COMMUTE_TO_WORK
+            # 晚上17-22点 → 可能是下班
+            elif 17 <= hour < 22:
+                if hour >= 20:
+                    return self.OVERTIME_LEAVE
+                else:
+                    return self.NORMAL_LEAVE
+
+        # 周末场景
+        if is_weekend:
+            return self.WEEKEND_TRIP
 
         return self.OTHER
 
@@ -92,6 +104,11 @@ class SceneService:
         """判断是否在正常出发时间"""
         typical_times = schedule.get('typical_depart_times', [8, 9])
 
+        # 如果没有学习数据，使用默认规则
+        if not typical_times or schedule.get('confidence', 0) < 0.3:
+            # 默认：7-10点为正常上班时间
+            return 7 <= hour <= 10
+
         # 在高频时段±1小时内
         return any(
             abs(hour - t) <= 1
@@ -102,8 +119,10 @@ class SceneService:
         """判断是否加班下班"""
         typical_times = schedule.get('typical_depart_times', [8, 9])
 
-        if not typical_times:
-            return False
+        # 如果没有学习数据，使用默认规则
+        if not typical_times or schedule.get('confidence', 0) < 0.3:
+            # 默认：20点以后算加班
+            return hour >= 20
 
         # 假设工作8小时
         avg_depart = sum(typical_times) / len(typical_times)

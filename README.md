@@ -2,7 +2,11 @@
 
 基于 CarPlay 连接/断开事件的智能助手系统，通过 iPhone 快捷指令自动化采集用户出行数据，AI 分析后提供个性化的语音播报服务。
 
-## 功能特性
+[![CI/CD](https://github.com/your-username/carplay-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/carplay-ai/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+## ✨ 功能特性
 
 - 🚗 **CarPlay 事件采集**：自动采集上车/下车事件
 - 📍 **智能位置学习**：自动识别家和工作地点（支持多个）
@@ -12,85 +16,88 @@
 - 🔊 **TTS 语音合成**：使用字节跳动 TTS 生成高质量语音
 - 👥 **多用户支持**：用户数据完全隔离
 
-## 技术栈
+## 🛠️ 技术栈
 
 - **后端框架**：FastAPI
 - **数据库**：SQLite (开发) / PostgreSQL (生产)
 - **AI 模型**：小米 MiMo-v2.5-pro
 - **TTS 服务**：字节跳动
 - **认证**：JWT
+- **容器化**：Docker
 
-## 快速开始
+## 🚀 快速开始
 
-### 1. 克隆项目
-
-```bash
-cd CarplayAI
-```
-
-### 2. 创建虚拟环境
+### 方式一：本地开发
 
 ```bash
+# 1. 克隆项目
+git clone https://github.com/your-username/carplay-ai.git
+cd carplay-ai
+
+# 2. 创建虚拟环境
 python -m venv venv
 source venv/bin/activate  # Mac/Linux
 # venv\Scripts\activate  # Windows
-```
 
-### 3. 安装依赖
-
-```bash
+# 3. 安装依赖
 pip install -r requirements.txt
+
+# 4. 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，填入你的配置
+
+# 5. 启动服务
+./run.sh
 ```
 
-### 4. 配置环境变量
-
-编辑 `.env` 文件，填入你的配置：
+### 方式二：Docker 部署
 
 ```bash
-# AI配置（小米 MiMo）
-MIMO_API_KEY=your-mimo-api-key
+# 1. 克隆项目
+git clone https://github.com/your-username/carplay-ai.git
+cd carplay-ai
 
-# TTS配置（字节跳动）
-TTS_APP_ID=your-app-id
-TTS_ACCESS_KEY=your-access-key
-TTS_RESOURCE_ID=your-resource-id
+# 2. 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，填入你的配置
+
+# 3. 启动服务
+docker-compose up -d
+
+# 4. 查看日志
+docker-compose logs -f
 ```
 
-### 5. 启动服务
+### 方式三：Docker Hub
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+docker run -d \
+  --name carplay-ai \
+  -p 8000:8000 \
+  -v $(pwd)/data:/app/data \
+  --env-file .env \
+  your-username/carplay-ai:latest
 ```
 
-### 6. 访问 API 文档
+## 📖 API 文档
 
-打开浏览器访问：http://localhost:8000/docs
+启动服务后访问：http://localhost:8000/docs
 
-## API 接口
+### 主要接口
 
-### 认证接口
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/v1/auth/register` | POST | 用户注册 |
+| `/api/v1/auth/login` | POST | 用户登录 |
+| `/api/v1/events` | POST | 上传 CarPlay 事件 |
+| `/api/v1/locations` | GET | 获取所有位置 |
+| `/api/v1/user/profile` | GET | 获取用户资料 |
 
-- `POST /api/v1/auth/register` - 用户注册
-- `POST /api/v1/auth/login` - 用户登录
+## 📱 快捷指令配置
 
-### 事件接口
+详见 [SHORTCUT_GUIDE.md](./SHORTCUT_GUIDE.md)
 
-- `POST /api/v1/events` - 上传 CarPlay 事件
-
-### 位置接口
-
-- `GET /api/v1/locations` - 获取所有位置
-- `GET /api/v1/locations/pending` - 获取待确认位置
-- `POST /api/v1/locations/confirm` - 确认位置
-- `POST /api/v1/locations/rename` - 重命名位置
-
-### 用户接口
-
-- `GET /api/v1/user/profile` - 获取用户资料
-- `PUT /api/v1/user/profile` - 更新用户资料
-- `GET /api/v1/user/schedule` - 获取用户班制
-
-## 项目结构
+## 🏗️ 项目结构
 
 ```
 carplay-ai/
@@ -103,34 +110,34 @@ carplay-ai/
 │   ├── routers/             # API路由
 │   ├── services/            # 业务逻辑
 │   └── utils/               # 工具函数
-├── .env                     # 环境变量
+├── static/                  # 前端页面
+├── .github/workflows/       # CI/CD 流程
+├── Dockerfile               # Docker 配置
+├── docker-compose.yml       # Docker Compose
 ├── .env.example             # 环境变量示例
 ├── requirements.txt         # 依赖列表
 └── README.md                # 项目说明
 ```
 
-## 开发说明
-
-### 开发模式
+## 🧪 开发
 
 ```bash
-# 启动开发服务器（自动重载）
-uvicorn app.main:app --reload --port 8000
-
 # 运行测试
 pytest
+
+# 代码检查
+flake8 app/
+black --check app/
+
+# 格式化代码
+black app/
+isort app/
 ```
 
-### 生产模式
+## 📦 部署
 
-```bash
-# 使用 Docker 部署
-docker-compose up -d
+详见 [DEPLOY.md](./DEPLOY.md)
 
-# 或直接运行
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-## License
+## 📄 License
 
 MIT

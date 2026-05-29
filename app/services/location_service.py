@@ -52,7 +52,7 @@ class LocationService:
             ):
                 # 更新访问信息
                 location.visit_count += 1
-                location.last_visit = datetime.now()
+                location.last_seen = datetime.now()
                 self.db.commit()
 
                 return location
@@ -71,7 +71,7 @@ class LocationService:
         if event.event_type != 'disconnect':
             return
 
-        # 查找匹配的位置
+        # 查找匹配的位置（200米范围内）
         location = self.identify_location(
             user.id,
             event.latitude,
@@ -82,8 +82,25 @@ class LocationService:
             # 更新已有位置
             self._update_location_center(location, event)
         else:
-            # 创建新位置
-            self._create_new_location(user, event)
+            # 创建新位置前，再次检查是否真的不存在
+            # 防止因浮点数精度问题导致重复创建
+            all_locations = self.get_user_locations(user.id)
+            is_duplicate = False
+
+            for loc in all_locations:
+                if is_in_radius(
+                    event.latitude, event.longitude,
+                    loc.latitude, loc.longitude,
+                    self.cluster_radius
+                ):
+                    # 已存在相近位置，更新而不是创建
+                    self._update_location_center(loc, event)
+                    is_duplicate = True
+                    break
+
+            if not is_duplicate:
+                # 确实是新位置，创建
+                self._create_new_location(user, event)
 
     def _update_location_center(self, location: Location, event: Event) -> None:
         """更新位置中心点（加权平均）"""
@@ -108,7 +125,7 @@ class LocationService:
             address=event.address,
             visit_count=1,
             first_seen=event.created_at,
-            last_visit=event.created_at
+            last_seen=event.created_at
         )
 
         self.db.add(location)
