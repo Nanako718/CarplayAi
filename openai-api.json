@@ -1,0 +1,26 @@
+{
+    "id": "8b51f9e0515949cb8207fbd35ea6ea5c",
+    "choices": [
+        {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+                "content": "Hello! I'm MiMo, Xiaomi's AI assistant created by the Xiaomi LLM-Core team. I'm here to chat, help answer questions, and assist with various tasks—whether it's providing information, brainstorming ideas, or just having a friendly conversation. Feel free to ask me anything, and I'll do my best to help! 😊",
+                "role": "assistant",
+                "tool_calls": null
+            }
+        }
+    ],
+    "created": 1776848906,
+    "model": "mimo-v2.5-pro",
+    "object": "chat.completion",
+    "usage": {
+        "completion_tokens": 72,
+        "prompt_tokens": 57,
+        "total_tokens": 129,
+        "completion_tokens_details": {
+            "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": null
+    }
+}
