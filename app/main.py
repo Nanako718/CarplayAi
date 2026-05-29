@@ -11,8 +11,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import init_db
-from app.routers import (auth_router, events_router, locations_router,
-                         user_router)
+from app.routers import auth_router, events_router, locations_router, user_router
 
 # 配置日志
 logging.basicConfig(

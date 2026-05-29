@@ -9,8 +9,12 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.location import (LocationConfirm, LocationRename,
-                                  LocationResponse, PendingLocationsResponse)
+from app.schemas.location import (
+    LocationConfirm,
+    LocationRename,
+    LocationResponse,
+    PendingLocationsResponse,
+)
 from app.schemas.response import ApiResponse
 from app.services.location_service import LocationService
 from app.utils.auth import get_current_user

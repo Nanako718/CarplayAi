@@ -2,8 +2,12 @@
 工具函数模块
 """
 
-from app.utils.auth import (create_access_token, get_password_hash,
-                            verify_password, verify_token)
+from app.utils.auth import (
+    create_access_token,
+    get_password_hash,
+    verify_password,
+    verify_token,
+)
 from app.utils.geo import calculate_distance, is_in_radius
 
 __all__ = [

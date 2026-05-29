@@ -8,8 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.schemas.user import TokenResponse, UserCreate, UserLogin, UserResponse
-from app.utils.auth import (create_access_token, get_password_hash,
-                            verify_password)
+from app.utils.auth import create_access_token, get_password_hash, verify_password
 
 router = APIRouter(prefix="/api/v1/auth", tags=["认证"])
 
