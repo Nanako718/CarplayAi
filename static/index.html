@@ -2,434 +2,640 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CarPlay AI 智能助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CarPlay AI · 智能出行助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #007AFF;
+            --primary-dark: #0056CC;
+            --bg: #F2F2F7;
+            --card: #FFFFFF;
+            --text: #1C1C1E;
+            --text-secondary: #8E8E93;
+            --border: #E5E5EA;
+            --success: #34C759;
+            --error: #FF3B30;
+            --radius: 12px;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            flex-direction: column;
         }
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            width: 100%;
-            max-width: 420px;
-        }
-
+        /* Header */
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
+            padding: 60px 24px 40px;
             text-align: center;
+            background: linear-gradient(180deg, #F2F2F7 0%, #F2F2F7 100%);
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 24px rgba(0, 122, 255, 0.25);
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
         }
 
         .header h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
         }
 
         .header p {
-            font-size: 14px;
-            opacity: 0.9;
+            font-size: 15px;
+            color: var(--text-secondary);
+            font-weight: 400;
         }
 
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 0 20px 40px;
+        }
+
+        /* Tabs */
         .tabs {
             display: flex;
-            background: #f5f5f5;
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 4px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
 
         .tab {
             flex: 1;
-            padding: 15px;
+            padding: 10px 16px;
             text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
             cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 500;
-            color: #666;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            user-select: none;
         }
 
         .tab.active {
-            background: white;
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
         }
 
-        .form-container {
-            padding: 30px;
+        /* Form Card */
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
 
+        /* Alert */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert.show { display: flex; align-items: center; gap: 8px; }
+        .alert.success { background: #E8F9ED; color: #1B7A2B; }
+        .alert.error { background: #FDECEA; color: #C62828; }
+
+        /* Form Group */
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .form-group input {
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
             width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
+            padding: 14px 16px;
+            background: var(--bg);
+            border: 2px solid transparent;
             border-radius: 10px;
             font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus {
+            font-family: inherit;
+            color: var(--text);
+            transition: all 0.2s ease;
             outline: none;
-            border-color: #667eea;
         }
 
+        .input-wrapper input:focus {
+            background: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
+
+        .input-wrapper input::placeholder {
+            color: #C7C7CC;
+        }
+
+        /* Button */
         .btn {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 16px;
+            background: var(--primary);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 12px;
+            font-size: 17px;
             font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s ease;
+            margin-top: 8px;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
         }
 
         .btn:active {
             transform: translateY(0);
         }
 
-        .message {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Token Display */
+        .token-screen {
             display: none;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            display: block;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            display: block;
-        }
-
-        .token-container {
-            display: none;
-            padding: 30px;
             text-align: center;
         }
 
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #34C759 0%, #30B350 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 16px rgba(52, 199, 89, 0.3);
+        }
+
+        .success-icon svg {
+            width: 32px;
+            height: 32px;
+            fill: white;
+        }
+
+        .token-screen h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .token-screen p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 24px;
+        }
+
         .token-box {
-            background: #f8f9fa;
-            border: 2px dashed #667eea;
+            background: var(--bg);
+            border: 1px solid var(--border);
             border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
+            padding: 16px;
+            margin-bottom: 16px;
             word-break: break-all;
-            font-family: monospace;
+            font-family: 'SF Mono', 'Fira Code', monospace;
             font-size: 12px;
-            color: #333;
+            color: var(--text);
+            text-align: left;
+            max-height: 100px;
+            overflow-y: auto;
         }
 
-        .copy-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-
-        .copy-btn:hover {
-            background: #218838;
-        }
-
-        .info-box {
-            background: #e7f3ff;
-            border: 1px solid #b3d7ff;
-            border-radius: 10px;
-            padding: 15px;
+        .btn-group {
+            display: flex;
+            gap: 12px;
             margin-top: 20px;
-            font-size: 13px;
-            color: #004085;
         }
 
-        .info-box h4 {
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        /* Info Card */
+        .info-card {
+            background: linear-gradient(135deg, #E3F2FD 0%, #E8EAF6 100%);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .info-card h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-card .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
             margin-bottom: 10px;
-            color: #004085;
+            font-size: 13px;
+            color: #37474F;
         }
 
-        .info-box code {
-            background: #fff3cd;
+        .info-card .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-num {
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .step code {
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary-dark);
             padding: 2px 6px;
             border-radius: 4px;
+            font-family: 'SF Mono', monospace;
             font-size: 12px;
         }
 
-        .shortcut-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
         }
 
-        .shortcut-section h3 {
-            margin-bottom: 15px;
-            color: #333;
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
         }
 
-        .shortcut-step {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            font-size: 13px;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        .shortcut-step strong {
-            color: #667eea;
+        /* Responsive */
+        @media (max-width: 380px) {
+            .header h1 { font-size: 24px; }
+            .card { padding: 20px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚗 CarPlay AI 智能助手</h1>
-            <p>注册账号，开始智能出行体验</p>
-        </div>
-
-        <div class="tabs">
-            <div class="tab active" onclick="switchTab('login')">登录</div>
-            <div class="tab" onclick="switchTab('register')">注册</div>
-        </div>
-
-        <div id="loginForm" class="form-container">
-            <div id="loginMessage" class="message"></div>
-            <div class="form-group">
-                <label>用户名</label>
-                <input type="text" id="loginUsername" placeholder="请输入用户名">
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                </svg>
             </div>
-            <div class="form-group">
-                <label>密码</label>
-                <input type="password" id="loginPassword" placeholder="请输入密码">
-            </div>
-            <button class="btn" onclick="login()">登 录</button>
-        </div>
+            <h1>CarPlay AI</h1>
+            <p>智能出行，从这里开始</p>
+        </header>
 
-        <div id="registerForm" class="form-container" style="display: none;">
-            <div id="registerMessage" class="message"></div>
-            <div class="form-group">
-                <label>用户名</label>
-                <input type="text" id="regUsername" placeholder="3-50个字符">
-            </div>
-            <div class="form-group">
-                <label>密码</label>
-                <input type="password" id="regPassword" placeholder="至少6个字符">
-            </div>
-            <div class="form-group">
-                <label>昵称（可选）</label>
-                <input type="text" id="regNickname" placeholder="给自己起个名字吧">
-            </div>
-            <button class="btn" onclick="register()">注 册</button>
-        </div>
-
-        <div id="tokenContainer" class="token-container">
-            <h3>🎉 登录成功！</h3>
-            <p>这是你的 API Token：</p>
-            <div class="token-box" id="tokenValue"></div>
-            <button class="copy-btn" onclick="copyToken()">📋 复制 Token</button>
-
-            <div class="info-box">
-                <h4>📱 快捷指令配置</h4>
-                <p>在 iPhone 快捷指令中使用此 Token：</p>
-                <p>1. 添加 HTTP 请求</p>
-                <p>2. URL: <code>http://你的服务器IP:8000/api/v1/events</code></p>
-                <p>3. 方法: <code>POST</code></p>
-                <p>4. 请求头: <code>Authorization: Bearer {token}</code></p>
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" data-tab="login">登录</div>
+                <div class="tab" data-tab="register">注册</div>
             </div>
 
-            <div class="shortcut-section">
-                <h3>📋 快速配置</h3>
-                <div class="shortcut-step">
-                    <strong>服务器地址：</strong><br>
-                    <code id="serverUrl">http://localhost:8000</code>
+            <!-- Login Form -->
+            <div id="loginCard" class="card">
+                <div id="loginAlert" class="alert"></div>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="loginUsername" placeholder="输入你的用户名" autocomplete="username">
+                    </div>
                 </div>
-                <div class="shortcut-step">
-                    <strong>你的 Token：</strong><br>
-                    <code id="shortToken" style="font-size: 10px;"></code>
+                <div class="form-group">
+                    <label>密码</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="loginPassword" placeholder="输入你的密码" autocomplete="current-password">
+                    </div>
+                </div>
+                <button class="btn" id="loginBtn" onclick="handleLogin()">登录</button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerCard" class="card" style="display: none;">
+                <div id="registerAlert" class="alert"></div>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="regUsername" placeholder="3-50 个字符" autocomplete="username">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="regPassword" placeholder="至少 6 个字符" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>昵称 <span style="font-weight:400;color:#C7C7CC">(可选)</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" id="regNickname" placeholder="给自己起个名字">
+                    </div>
+                </div>
+                <button class="btn" id="registerBtn" onclick="handleRegister()">创建账号</button>
+            </div>
+
+            <!-- Token Screen -->
+            <div id="tokenScreen" class="card token-screen">
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <h2>欢迎使用</h2>
+                <p>你的专属 API Token：</p>
+                <div class="token-box" id="tokenValue"></div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="handleLogout()">切换账号</button>
+                    <button class="btn" onclick="copyToken()">复制 Token</button>
+                </div>
+
+                <div class="info-card">
+                    <h4>📱 快捷指令配置</h4>
+                    <div class="step">
+                        <span class="step-num">1</span>
+                        <span>打开快捷指令 App，创建新指令</span>
+                    </div>
+                    <div class="step">
+                        <span class="step-num">2</span>
+                        <span>添加「获取 URL 内容」动作</span>
+                    </div>
+                    <div class="step">
+                        <span class="step-num">3</span>
+                        <span>URL 填写 <code id="apiUrl">http://IP:8000/api/v1/events</code></span>
+                    </div>
+                    <div class="step">
+                        <span class="step-num">4</span>
+                        <span>添加请求头 <code>Authorization: Bearer Token</code></span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            CarPlay AI v1.0 · Made with ❤️
+        </footer>
     </div>
 
     <script>
-        // API 基础地址
         const API_BASE = window.location.origin;
 
-        // 切换标签
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('tokenContainer').style.display = 'none';
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
 
-            if (tab === 'login') {
-                document.querySelector('.tab:first-child').classList.add('active');
-                document.getElementById('loginForm').style.display = 'block';
-            } else {
-                document.querySelector('.tab:last-child').classList.add('active');
-                document.getElementById('registerForm').style.display = 'block';
-            }
+                const tabName = tab.dataset.tab;
+                document.getElementById('loginCard').style.display = tabName === 'login' ? 'block' : 'none';
+                document.getElementById('registerCard').style.display = tabName === 'register' ? 'block' : 'none';
+                document.getElementById('tokenScreen').style.display = 'none';
+            });
+        });
+
+        // Show alert
+        function showAlert(elementId, message, type = 'error') {
+            const alert = document.getElementById(elementId);
+            alert.textContent = message;
+            alert.className = `alert show ${type}`;
+            setTimeout(() => alert.classList.remove('show'), 3000);
         }
 
-        // 显示消息
-        function showMessage(elementId, message, isError = true) {
-            const el = document.getElementById(elementId);
-            el.textContent = message;
-            el.className = `message ${isError ? 'error' : 'success'}`;
-        }
-
-        // 注册
-        async function register() {
-            const username = document.getElementById('regUsername').value;
-            const password = document.getElementById('regPassword').value;
-            const nickname = document.getElementById('regNickname').value;
-
-            if (!username || !password) {
-                showMessage('registerMessage', '请填写用户名和密码');
-                return;
-            }
-
-            if (username.length < 3) {
-                showMessage('registerMessage', '用户名至少3个字符');
-                return;
-            }
-
-            if (password.length < 6) {
-                showMessage('registerMessage', '密码至少6个字符');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, nickname })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showMessage('registerMessage', '注册成功！正在跳转...', false);
-                    // 保存 token
-                    localStorage.setItem('token', data.access_token);
-                    localStorage.setItem('userId', data.user_id);
-                    // 显示 token
-                    setTimeout(() => showToken(data.access_token), 1000);
-                } else {
-                    showMessage('registerMessage', data.detail || '注册失败');
-                }
-            } catch (error) {
-                showMessage('registerMessage', '网络错误，请检查服务器');
-            }
-        }
-
-        // 登录
-        async function login() {
-            const username = document.getElementById('loginUsername').value;
+        // Login
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
 
             if (!username || !password) {
-                showMessage('loginMessage', '请填写用户名和密码');
+                showAlert('loginAlert', '请填写用户名和密码');
                 return;
             }
 
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>';
+
             try {
-                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
 
-                const data = await response.json();
+                const data = await res.json();
 
-                if (response.ok) {
-                    showMessage('loginMessage', '登录成功！', false);
-                    // 保存 token
+                if (res.ok) {
                     localStorage.setItem('token', data.access_token);
-                    localStorage.setItem('userId', data.user_id);
-                    // 显示 token
-                    setTimeout(() => showToken(data.access_token), 500);
+                    showTokenScreen(data.access_token);
                 } else {
-                    showMessage('loginMessage', data.detail || '登录失败');
+                    showAlert('loginAlert', data.detail || '登录失败');
                 }
-            } catch (error) {
-                showMessage('loginMessage', '网络错误，请检查服务器');
+            } catch (e) {
+                showAlert('loginAlert', '网络连接失败');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '登录';
             }
         }
 
-        // 显示 Token
-        function showToken(token) {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('tokenContainer').style.display = 'block';
-            document.getElementById('tokenValue').textContent = token;
-            document.getElementById('shortToken').textContent = token.substring(0, 50) + '...';
-            document.getElementById('serverUrl').textContent = API_BASE;
+        // Register
+        async function handleRegister() {
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const nickname = document.getElementById('regNickname').value.trim();
+
+            if (!username || !password) {
+                showAlert('registerAlert', '请填写用户名和密码');
+                return;
+            }
+
+            if (username.length < 3) {
+                showAlert('registerAlert', '用户名至少 3 个字符');
+                return;
+            }
+
+            if (password.length < 6) {
+                showAlert('registerAlert', '密码至少 6 个字符');
+                return;
+            }
+
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, nickname: nickname || username })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.access_token);
+                    showAlert('registerAlert', '注册成功！', 'success');
+                    setTimeout(() => showTokenScreen(data.access_token), 800);
+                } else {
+                    showAlert('registerAlert', data.detail || '注册失败');
+                }
+            } catch (e) {
+                showAlert('registerAlert', '网络连接失败');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '创建账号';
+            }
         }
 
-        // 复制 Token
+        // Show token screen
+        function showTokenScreen(token) {
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('registerCard').style.display = 'none';
+            document.getElementById('tokenScreen').style.display = 'block';
+            document.getElementById('tokenValue').textContent = token;
+            document.getElementById('apiUrl').textContent = `${API_BASE}/api/v1/events`;
+        }
+
+        // Copy token
         function copyToken() {
             const token = document.getElementById('tokenValue').textContent;
             navigator.clipboard.writeText(token).then(() => {
-                alert('Token 已复制到剪贴板！');
-            }).catch(() => {
-                //  fallback
-                const textarea = document.createElement('textarea');
-                textarea.value = token;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                alert('Token 已复制！');
+                const btn = event.target;
+                btn.textContent = '已复制 ✓';
+                btn.style.background = 'var(--success)';
+                setTimeout(() => {
+                    btn.textContent = '复制 Token';
+                    btn.style.background = '';
+                }, 2000);
             });
         }
 
-        // 检查是否已登录
-        window.onload = function() {
+        // Logout
+        function handleLogout() {
+            localStorage.removeItem('token');
+            document.getElementById('tokenScreen').style.display = 'none';
+            document.getElementById('loginCard').style.display = 'block';
+            document.querySelector('.tab[data-tab="login"]').click();
+        }
+
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
             if (token) {
-                showToken(token);
+                showTokenScreen(token);
             }
-        };
+        });
+
+        // Enter key support
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const form = input.closest('.card');
+                    if (form.id === 'loginCard') handleLogin();
+                    if (form.id === 'registerCard') handleRegister();
+                }
+            });
+        });
     </script>
 </body>
 </html>
