@@ -1,9 +1,12 @@
 """
 事件服务模块
 """
-from sqlalchemy.orm import Session
+
 from datetime import datetime
 from typing import Optional
+
+from sqlalchemy.orm import Session
+
 from app.models.event import Event
 from app.models.user import User
 from app.schemas.event import EventCreate
@@ -32,11 +35,17 @@ class EventService:
             latitude=event_data.latitude,
             longitude=event_data.longitude,
             address=event_data.address,
-            weather_condition=event_data.weather.condition if event_data.weather else None,
-            temperature_high=event_data.weather.temp_high if event_data.weather else None,
+            weather_condition=(
+                event_data.weather.condition if event_data.weather else None
+            ),
+            temperature_high=(
+                event_data.weather.temp_high if event_data.weather else None
+            ),
             temperature_low=event_data.weather.temp_low if event_data.weather else None,
-            precipitation_prob=event_data.weather.precipitation_prob if event_data.weather else None,
-            created_at=event_data.timestamp or datetime.now()
+            precipitation_prob=(
+                event_data.weather.precipitation_prob if event_data.weather else None
+            ),
+            created_at=event_data.timestamp or datetime.now(),
         )
 
         self.db.add(event)
@@ -46,10 +55,7 @@ class EventService:
         return event
 
     def get_user_events(
-        self,
-        user_id: int,
-        event_type: Optional[str] = None,
-        limit: int = 100
+        self, user_id: int, event_type: Optional[str] = None, limit: int = 100
     ) -> list[Event]:
         """
         获取用户事件列表
@@ -69,11 +75,7 @@ class EventService:
 
         return query.order_by(Event.created_at.desc()).limit(limit).all()
 
-    def get_recent_events(
-        self,
-        user_id: int,
-        days: int = 30
-    ) -> list[Event]:
+    def get_recent_events(self, user_id: int, days: int = 30) -> list[Event]:
         """
         获取最近N天的事件
 

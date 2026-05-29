@@ -1,14 +1,18 @@
 """
 用户作息模型
 """
-from sqlalchemy import Column, Integer, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+
 from datetime import datetime
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer
+from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
 class UserSchedule(Base):
     """用户作息表（用于班制学习）"""
+
     __tablename__ = "user_schedules"
 
     id = Column(Integer, primary_key=True, index=True)

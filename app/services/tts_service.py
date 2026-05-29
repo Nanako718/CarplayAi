@@ -1,13 +1,15 @@
 """
 TTS语音合成服务模块（字节跳动）
 """
-import json
-import base64
-import httpx
-from typing import Optional
-from app.config import settings
 
+import base64
+import json
 import logging
+from typing import Optional
+
+import httpx
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +26,12 @@ class TTSService:
 
         # 音色配置
         self.voices = {
-            'cancan': 'zh_female_cancan_mars_bigtts',  # 灿灿（女声，活泼）
-            'default': self.default_voice,
+            "cancan": "zh_female_cancan_mars_bigtts",  # 灿灿（女声，活泼）
+            "default": self.default_voice,
         }
 
     async def synthesize_to_stream(
-        self,
-        text: str,
-        voice: str = 'default',
-        emotion: str = 'warm'
+        self, text: str, voice: str = "default", emotion: str = "warm"
     ) -> Optional[bytes]:
         """
         文本转语音 - 返回音频二进制数据
@@ -57,34 +56,32 @@ class TTSService:
                 "X-Api-Access-Key": self.access_key,
                 "X-Api-Resource-Id": self.resource_id,
                 "Content-Type": "application/json",
-                "Connection": "keep-alive"
+                "Connection": "keep-alive",
             }
 
             # 语气映射
             emotion_map = {
-                'happy': 'happy',
-                'warm': 'warm',
-                'calm': 'calm',
-                'worried': 'worried',
-                'gentle': 'gentle',
-                'excited': 'excited'
+                "happy": "happy",
+                "warm": "warm",
+                "calm": "calm",
+                "worried": "worried",
+                "gentle": "gentle",
+                "excited": "excited",
             }
 
             # 构建请求体
             payload = {
-                "user": {
-                    "uid": "carplay_user"
-                },
+                "user": {"uid": "carplay_user"},
                 "req_params": {
                     "text": text,
-                    "speaker": self.voices.get(voice, self.voices['default']),
+                    "speaker": self.voices.get(voice, self.voices["default"]),
                     "audio_params": {
                         "format": "mp3",
                         "sample_rate": 24000,
-                        "emotion": emotion_map.get(emotion, 'warm'),
-                        "emotion_scale": 4
-                    }
-                }
+                        "emotion": emotion_map.get(emotion, "warm"),
+                        "emotion_scale": 4,
+                    },
+                },
             }
 
             # 调用TTS API（HTTP Chunked流式）
@@ -96,21 +93,13 @@ class TTSService:
             logger.error(f"TTS调用异常：{e}")
             return None
 
-    async def _call_tts_api(
-        self,
-        headers: dict,
-        payload: dict
-    ) -> Optional[bytes]:
+    async def _call_tts_api(self, headers: dict, payload: dict) -> Optional[bytes]:
         """调用字节跳动TTS API（HTTP Chunked流式）"""
         audio_data = bytearray()
 
         async with httpx.AsyncClient() as client:
             async with client.stream(
-                "POST",
-                self.endpoint,
-                headers=headers,
-                json=payload,
-                timeout=30.0
+                "POST", self.endpoint, headers=headers, json=payload, timeout=30.0
             ) as response:
                 if response.status_code != 200:
                     logger.error(f"TTS API错误：{response.status_code}")
@@ -131,13 +120,17 @@ class TTSService:
                             continue
 
                         # 文本响应（时间戳）
-                        if data.get("code", 0) == 0 and "sentence" in data and data["sentence"]:
+                        if (
+                            data.get("code", 0) == 0
+                            and "sentence" in data
+                            and data["sentence"]
+                        ):
                             logger.debug(f"句子数据：{data}")
                             continue
 
                         # 完成响应
                         if data.get("code", 0) == 20000000:
-                            if 'usage' in data:
+                            if "usage" in data:
                                 logger.info(f"用量：{data['usage']}")
                             break
 

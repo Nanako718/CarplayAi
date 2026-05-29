@@ -1,14 +1,18 @@
 """
 事件模型
 """
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+
 from datetime import datetime
+
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
 class Event(Base):
     """事件表（CarPlay连接/断开）"""
+
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True, index=True)

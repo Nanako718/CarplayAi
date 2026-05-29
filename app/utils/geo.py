@@ -1,14 +1,12 @@
 """
 地理计算工具函数
 """
+
 import math
 from typing import Tuple
 
 
-def calculate_distance(
-    lat1: float, lng1: float,
-    lat2: float, lng2: float
-) -> float:
+def calculate_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     """
     计算两点距离（米）- Haversine公式
 
@@ -27,16 +25,17 @@ def calculate_distance(
     dlng = lng2 - lng1
 
     # Haversine公式
-    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(lat1) * math.cos(lat2) * math.sin(dlng / 2) ** 2
+    )
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     return R * c
 
 
 def is_in_radius(
-    lat1: float, lng1: float,
-    lat2: float, lng2: float,
-    radius_meters: float
+    lat1: float, lng1: float, lat2: float, lng2: float, radius_meters: float
 ) -> bool:
     """
     判断两点是否在指定半径内

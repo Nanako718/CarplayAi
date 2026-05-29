@@ -1,29 +1,32 @@
 """
 场景判断服务模块
 """
-from sqlalchemy.orm import Session
+
 from datetime import datetime
 from typing import Dict, Optional
+
+from sqlalchemy.orm import Session
+
+from app.config import settings
 from app.models.event import Event
 from app.models.location import Location
 from app.models.user import User
-from app.services.schedule_service import ScheduleService
 from app.services.location_service import LocationService
+from app.services.schedule_service import ScheduleService
 from app.utils.geo import is_in_radius
-from app.config import settings
 
 
 class SceneService:
     """场景判断服务"""
 
     # 场景类型常量
-    COMMUTE_TO_WORK = 'commute_to_work'  # 上班通勤
-    NORMAL_LEAVE = 'normal_leave'  # 正常下班
-    OVERTIME_LEAVE = 'overtime_leave'  # 加班下班
-    LATE_NIGHT = 'late_night'  # 深夜回家
-    WEEKEND_TRIP = 'weekend_trip'  # 周末出行
-    IRREGULAR_DEPARTURE = 'irregular_departure'  # 非正常时间出发
-    OTHER = 'other'  # 其他
+    COMMUTE_TO_WORK = "commute_to_work"  # 上班通勤
+    NORMAL_LEAVE = "normal_leave"  # 正常下班
+    OVERTIME_LEAVE = "overtime_leave"  # 加班下班
+    LATE_NIGHT = "late_night"  # 深夜回家
+    WEEKEND_TRIP = "weekend_trip"  # 周末出行
+    IRREGULAR_DEPARTURE = "irregular_departure"  # 非正常时间出发
+    OTHER = "other"  # 其他
 
     def __init__(self, db: Session):
         self.db = db
@@ -56,21 +59,21 @@ class SceneService:
             return self.LATE_NIGHT
 
         # 从家出发 → 上班（不管是不是周末）
-        if location_type == 'home' and event.event_type == 'connect':
+        if location_type == "home" and event.event_type == "connect":
             if self._is_normal_depart_time(hour, user_schedule):
                 return self.COMMUTE_TO_WORK
             else:
                 return self.IRREGULAR_DEPARTURE
 
         # 从工作地点出发 → 下班（不管是不是周末）
-        if location_type == 'work' and event.event_type == 'connect':
+        if location_type == "work" and event.event_type == "connect":
             if self._is_overtime(hour, user_schedule):
                 return self.OVERTIME_LEAVE
             else:
                 return self.NORMAL_LEAVE
 
         # 冷启动：没有位置数据时，根据时间判断
-        if location_type == 'unknown':
+        if location_type == "unknown":
             # 早上7-10点 → 可能是上班
             if 7 <= hour <= 10:
                 return self.COMMUTE_TO_WORK
@@ -90,37 +93,32 @@ class SceneService:
     def _get_location_type(self, user_id: int, event: Event) -> str:
         """获取位置类型"""
         location = self.location_service.identify_location(
-            user_id,
-            event.latitude,
-            event.longitude
+            user_id, event.latitude, event.longitude
         )
 
         if location:
             return location.location_type
 
-        return 'unknown'
+        return "unknown"
 
     def _is_normal_depart_time(self, hour: int, schedule: Dict) -> bool:
         """判断是否在正常出发时间"""
-        typical_times = schedule.get('typical_depart_times', [8, 9])
+        typical_times = schedule.get("typical_depart_times", [8, 9])
 
         # 如果没有学习数据，使用默认规则
-        if not typical_times or schedule.get('confidence', 0) < 0.3:
+        if not typical_times or schedule.get("confidence", 0) < 0.3:
             # 默认：7-10点为正常上班时间
             return 7 <= hour <= 10
 
         # 在高频时段±1小时内
-        return any(
-            abs(hour - t) <= 1
-            for t in typical_times
-        )
+        return any(abs(hour - t) <= 1 for t in typical_times)
 
     def _is_overtime(self, hour: int, schedule: Dict) -> bool:
         """判断是否加班下班"""
-        typical_times = schedule.get('typical_depart_times', [8, 9])
+        typical_times = schedule.get("typical_depart_times", [8, 9])
 
         # 如果没有学习数据，使用默认规则
-        if not typical_times or schedule.get('confidence', 0) < 0.3:
+        if not typical_times or schedule.get("confidence", 0) < 0.3:
             # 默认：20点以后算加班
             return hour >= 20
 
@@ -137,12 +135,12 @@ class SceneService:
     def get_scene_description(self, scene: str) -> str:
         """获取场景描述"""
         descriptions = {
-            self.COMMUTE_TO_WORK: '上班通勤，从家出发去工作',
-            self.NORMAL_LEAVE: '正常下班，从工作地点回家',
-            self.OVERTIME_LEAVE: '加班下班，比平时晚',
-            self.LATE_NIGHT: '深夜回家',
-            self.WEEKEND_TRIP: '周末出行',
-            self.IRREGULAR_DEPARTURE: '非正常时间出发',
-            self.OTHER: '其他场景'
+            self.COMMUTE_TO_WORK: "上班通勤，从家出发去工作",
+            self.NORMAL_LEAVE: "正常下班，从工作地点回家",
+            self.OVERTIME_LEAVE: "加班下班，比平时晚",
+            self.LATE_NIGHT: "深夜回家",
+            self.WEEKEND_TRIP: "周末出行",
+            self.IRREGULAR_DEPARTURE: "非正常时间出发",
+            self.OTHER: "其他场景",
         }
-        return descriptions.get(scene, '未知场景')
+        return descriptions.get(scene, "未知场景")

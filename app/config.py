@@ -2,9 +2,11 @@
 配置管理模块
 从 .env 文件加载配置
 """
-from pydantic_settings import BaseSettings
-from typing import Optional
+
 import os
+from typing import Optional
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):

@@ -1,13 +1,16 @@
 """
 事件相关Schema
 """
-from pydantic import BaseModel, Field
-from typing import Optional
+
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class WeatherData(BaseModel):
     """天气数据"""
+
     condition: Optional[str] = Field(None, description="天气状况")
     temp_high: Optional[float] = Field(None, description="最高温")
     temp_low: Optional[float] = Field(None, description="最低温")
@@ -16,6 +19,7 @@ class WeatherData(BaseModel):
 
 class EventCreate(BaseModel):
     """事件创建"""
+
     event_type: str = Field(..., description="事件类型: connect/disconnect")
     latitude: float = Field(..., description="纬度")
     longitude: float = Field(..., description="经度")
@@ -26,6 +30,7 @@ class EventCreate(BaseModel):
 
 class EventResponse(BaseModel):
     """事件响应"""
+
     id: int
     event_type: str
     latitude: float

@@ -1,15 +1,17 @@
 """
 AI播报生成服务模块（小米 MiMo）
 """
+
 import asyncio
+import logging
 import os
-from typing import Dict, Optional
 from datetime import datetime
+from typing import Dict, Optional
+
 from openai import OpenAI
+
 from app.config import settings
 from app.services.broadcast_service import BroadcastService
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +26,7 @@ class AIBroadcastService:
         self.timeout = settings.AI_TIMEOUT
 
         # 初始化OpenAI客户端（兼容格式）
-        self.client = OpenAI(
-            api_key=self.api_key,
-            base_url=self.base_url
-        )
+        self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
 
         # 规则引擎（降级方案）
         self.rule_engine = BroadcastService()
@@ -57,19 +56,16 @@ class AIBroadcastService:
 
         # 场景描述模板
         self.scene_templates = {
-            'commute_to_work': '现在是{time}，用户从家出发去上班，天气{weather}，温度{temp_low}°C~{temp_high}°C，降水概率{precip}%。',
-            'normal_leave': '现在是{time}，用户从工作地点下班回家，天气{weather}。',
-            'overtime_leave': '现在是{time}，用户加班到很晚才下班，天气{weather}。请表达关心和安慰。',
-            'late_night': '现在是{time}，用户深夜/凌晨还在路上开车，天气{weather}。请特别关心安全，提醒注意休息。',
-            'weekend_trip': '现在是{time}，用户在{location}附近开车，天气{weather}，温度{temp_low}°C~{temp_high}°C。注意：如果是凌晨(0:00-6:00)，重点关心安全和休息。',
-            'irregular_departure': '现在是{time}，用户非正常时间出发，天气{weather}。'
+            "commute_to_work": "现在是{time}，用户从家出发去上班，天气{weather}，温度{temp_low}°C~{temp_high}°C，降水概率{precip}%。",
+            "normal_leave": "现在是{time}，用户从工作地点下班回家，天气{weather}。",
+            "overtime_leave": "现在是{time}，用户加班到很晚才下班，天气{weather}。请表达关心和安慰。",
+            "late_night": "现在是{time}，用户深夜/凌晨还在路上开车，天气{weather}。请特别关心安全，提醒注意休息。",
+            "weekend_trip": "现在是{time}，用户在{location}附近开车，天气{weather}，温度{temp_low}°C~{temp_high}°C。注意：如果是凌晨(0:00-6:00)，重点关心安全和休息。",
+            "irregular_departure": "现在是{time}，用户非正常时间出发，天气{weather}。",
         }
 
     async def generate_broadcast(
-        self,
-        user_id: int,
-        event: Dict,
-        scene: str
+        self, user_id: int, event: Dict, scene: str
     ) -> tuple[Optional[str], str]:
         """
         调用AI生成播报
@@ -88,8 +84,7 @@ class AIBroadcastService:
 
             # 调用AI（带超时）
             response = await asyncio.wait_for(
-                self._call_ai(user_message),
-                timeout=self.timeout
+                self._call_ai(user_message), timeout=self.timeout
             )
 
             if response:
@@ -97,15 +92,15 @@ class AIBroadcastService:
                 text, emotion = self._parse_response(response)
                 return text, emotion
 
-            return None, 'warm'
+            return None, "warm"
 
         except asyncio.TimeoutError:
             logger.warning(f"AI调用超时，用户{user_id}，场景{scene}")
-            return None, 'warm'
+            return None, "warm"
 
         except Exception as e:
             logger.error(f"AI调用失败：{e}")
-            return None, 'warm'
+            return None, "warm"
 
     def _parse_response(self, response: str) -> tuple[str, str]:
         """解析AI响应，提取文本和语气"""
@@ -115,25 +110,22 @@ class AIBroadcastService:
         try:
             # 去掉markdown代码块
             cleaned = response.strip()
-            if cleaned.startswith('```'):
+            if cleaned.startswith("```"):
                 # 去掉 ```json 和 ```
-                cleaned = re.sub(r'^```(?:json)?\s*', '', cleaned)
-                cleaned = re.sub(r'\s*```$', '', cleaned)
+                cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+                cleaned = re.sub(r"\s*```$", "", cleaned)
 
             # 尝试解析JSON
             data = json.loads(cleaned)
-            text = data.get('text', response)
-            emotion = data.get('emotion', 'warm')
+            text = data.get("text", response)
+            emotion = data.get("emotion", "warm")
             return text, emotion
         except:
             # 如果不是JSON格式，直接返回文本
-            return response, 'warm'
+            return response, "warm"
 
     def generate_broadcast_with_fallback(
-        self,
-        user_id: int,
-        event: Dict,
-        scene: str
+        self, user_id: int, event: Dict, scene: str
     ) -> tuple[str, bool]:
         """
         生成播报（带降级）
@@ -165,20 +157,22 @@ class AIBroadcastService:
 
     def _build_user_message(self, event: Dict, scene: str) -> str:
         """构建用户消息"""
-        template = self.scene_templates.get(scene, self.scene_templates['irregular_departure'])
+        template = self.scene_templates.get(
+            scene, self.scene_templates["irregular_departure"]
+        )
 
         # 基础信息
-        created_at = event.get('created_at', datetime.now())
+        created_at = event.get("created_at", datetime.now())
         message = template.format(
-            time=created_at.strftime('%Y-%m-%d %H:%M'),
-            weather=event.get('weather_condition', '未知'),
-            temp_high=event.get('temperature_high', '未知'),
-            temp_low=event.get('temperature_low', '未知'),
-            precip=event.get('precipitation_prob', '未知')
+            time=created_at.strftime("%Y-%m-%d %H:%M"),
+            weather=event.get("weather_condition", "未知"),
+            temp_high=event.get("temperature_high", "未知"),
+            temp_low=event.get("temperature_low", "未知"),
+            precip=event.get("precipitation_prob", "未知"),
         )
 
         # 添加位置信息
-        if event.get('address'):
+        if event.get("address"):
             message += f"位置：{event['address']}。"
 
         return message
@@ -193,13 +187,13 @@ class AIBroadcastService:
                 model=self.model,
                 messages=[
                     {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": user_message}
+                    {"role": "user", "content": user_message},
                 ],
                 temperature=1.0,
                 top_p=0.95,
                 max_tokens=512,  # 减少 token 加快速度
-                extra_body={'thinking': {'type': 'disabled'}}  # 关闭思考模式
-            )
+                extra_body={"thinking": {"type": "disabled"}},  # 关闭思考模式
+            ),
         )
 
         content = response.choices[0].message.content

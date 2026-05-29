@@ -1,14 +1,17 @@
 """
 位置服务模块
 """
-from sqlalchemy.orm import Session
+
 from datetime import datetime
-from typing import Optional, List, Tuple
-from app.models.location import Location
-from app.models.event import Event
-from app.models.user import User
+from typing import List, Optional, Tuple
+
+from sqlalchemy.orm import Session
+
 from app.config import settings
-from app.utils.geo import calculate_distance, is_in_radius, get_center_point
+from app.models.event import Event
+from app.models.location import Location
+from app.models.user import User
+from app.utils.geo import calculate_distance, get_center_point, is_in_radius
 
 
 class LocationService:
@@ -20,10 +23,7 @@ class LocationService:
         self.confidence_threshold = settings.LOCATION_CONFIDENCE_THRESHOLD
 
     def identify_location(
-        self,
-        user_id: int,
-        latitude: float,
-        longitude: float
+        self, user_id: int, latitude: float, longitude: float
     ) -> Optional[Location]:
         """
         识别位置（匹配已有位置）
@@ -37,18 +37,16 @@ class LocationService:
         - Location对象 或 None
         """
         # 获取用户所有位置
-        locations = (
-            self.db.query(Location)
-            .filter(Location.user_id == user_id)
-            .all()
-        )
+        locations = self.db.query(Location).filter(Location.user_id == user_id).all()
 
         # 查找匹配的位置
         for location in locations:
             if is_in_radius(
-                latitude, longitude,
-                location.latitude, location.longitude,
-                self.cluster_radius
+                latitude,
+                longitude,
+                location.latitude,
+                location.longitude,
+                self.cluster_radius,
             ):
                 # 更新访问信息
                 location.visit_count += 1
@@ -68,15 +66,11 @@ class LocationService:
         - event: 事件对象
         """
         # 只处理下车事件
-        if event.event_type != 'disconnect':
+        if event.event_type != "disconnect":
             return
 
         # 查找匹配的位置（200米范围内）
-        location = self.identify_location(
-            user.id,
-            event.latitude,
-            event.longitude
-        )
+        location = self.identify_location(user.id, event.latitude, event.longitude)
 
         if location:
             # 更新已有位置
@@ -89,9 +83,11 @@ class LocationService:
 
             for loc in all_locations:
                 if is_in_radius(
-                    event.latitude, event.longitude,
-                    loc.latitude, loc.longitude,
-                    self.cluster_radius
+                    event.latitude,
+                    event.longitude,
+                    loc.latitude,
+                    loc.longitude,
+                    self.cluster_radius,
                 ):
                     # 已存在相近位置，更新而不是创建
                     self._update_location_center(loc, event)
@@ -105,12 +101,10 @@ class LocationService:
     def _update_location_center(self, location: Location, event: Event) -> None:
         """更新位置中心点（加权平均）"""
         total = location.visit_count
-        location.latitude = (
-            location.latitude * total + event.latitude
-        ) / (total + 1)
-        location.longitude = (
-            location.longitude * total + event.longitude
-        ) / (total + 1)
+        location.latitude = (location.latitude * total + event.latitude) / (total + 1)
+        location.longitude = (location.longitude * total + event.longitude) / (
+            total + 1
+        )
         location.address = event.address
 
         self.db.commit()
@@ -119,13 +113,13 @@ class LocationService:
         """创建新位置"""
         location = Location(
             user_id=user.id,
-            location_type='unknown',  # 待识别
+            location_type="unknown",  # 待识别
             latitude=event.latitude,
             longitude=event.longitude,
             address=event.address,
             visit_count=1,
             first_seen=event.created_at,
-            last_seen=event.created_at
+            last_seen=event.created_at,
         )
 
         self.db.add(location)
@@ -148,7 +142,7 @@ class LocationService:
         unknown_locations = (
             self.db.query(Location)
             .filter(Location.user_id == user_id)
-            .filter(Location.location_type == 'unknown')
+            .filter(Location.location_type == "unknown")
             .all()
         )
 
@@ -160,17 +154,20 @@ class LocationService:
             events = (
                 self.db.query(Event)
                 .filter(Event.user_id == user_id)
-                .filter(Event.event_type == 'disconnect')
+                .filter(Event.event_type == "disconnect")
                 .all()
             )
 
             # 计算与该位置的距离
             nearby_events = [
-                e for e in events
+                e
+                for e in events
                 if is_in_radius(
-                    e.latitude, e.longitude,
-                    location.latitude, location.longitude,
-                    self.cluster_radius
+                    e.latitude,
+                    e.longitude,
+                    location.latitude,
+                    location.longitude,
+                    self.cluster_radius,
                 )
             ]
 
@@ -179,7 +176,8 @@ class LocationService:
 
             # 统计夜间访问
             night_visits = sum(
-                1 for e in nearby_events
+                1
+                for e in nearby_events
                 if e.created_at.hour >= 22 or e.created_at.hour < 6
             )
 
@@ -187,7 +185,7 @@ class LocationService:
 
             # 识别家
             if night_ratio > 0.3:
-                location.location_type = 'home'
+                location.location_type = "home"
                 location.confidence = min(night_ratio * 1.5, 1.0)
 
                 # 如果置信度够高，自动确认
@@ -200,7 +198,7 @@ class LocationService:
             # 识别工作地点
             weekly_frequency = self._calculate_weekly_frequency(location)
             if weekly_frequency >= 3 and location.visit_count >= 10:
-                location.location_type = 'work'
+                location.location_type = "work"
                 location.confidence = min(weekly_frequency / 10, 1.0)
 
                 self.db.commit()
@@ -217,11 +215,7 @@ class LocationService:
 
     def get_user_locations(self, user_id: int) -> List[Location]:
         """获取用户所有位置"""
-        return (
-            self.db.query(Location)
-            .filter(Location.user_id == user_id)
-            .all()
-        )
+        return self.db.query(Location).filter(Location.user_id == user_id).all()
 
     def get_pending_locations(self, user_id: int) -> List[Location]:
         """获取待确认的位置"""
@@ -249,10 +243,7 @@ class LocationService:
         return location
 
     def rename_location(
-        self,
-        location_id: int,
-        user_id: int,
-        name: str
+        self, location_id: int, user_id: int, name: str
     ) -> Optional[Location]:
         """重命名位置"""
         location = (

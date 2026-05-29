@@ -1,14 +1,19 @@
 """
 播报模型
 """
-from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey
-from sqlalchemy.orm import relationship
+
 from datetime import datetime
+
+from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
+                        String)
+from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 
 class Broadcast(Base):
     """播报表"""
+
     __tablename__ = "broadcasts"
 
     id = Column(Integer, primary_key=True, index=True)

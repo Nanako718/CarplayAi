@@ -1,15 +1,18 @@
 """
 班制学习服务模块
 """
-from sqlalchemy.orm import Session
+
+from collections import Counter
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
-from collections import Counter
+
+from sqlalchemy.orm import Session
+
+from app.config import settings
 from app.models.event import Event
 from app.models.location import Location
 from app.models.schedule import UserSchedule
 from app.utils.geo import is_in_radius
-from app.config import settings
 
 
 class ScheduleService:
@@ -47,7 +50,7 @@ class ScheduleService:
         home_location = (
             self.db.query(Location)
             .filter(Location.user_id == user_id)
-            .filter(Location.location_type == 'home')
+            .filter(Location.location_type == "home")
             .filter(Location.is_confirmed == True)
             .first()
         )
@@ -57,12 +60,15 @@ class ScheduleService:
 
         # 筛选从家出发的事件
         depart_from_home = [
-            e for e in events
-            if e.event_type == 'connect'
+            e
+            for e in events
+            if e.event_type == "connect"
             and is_in_radius(
-                e.latitude, e.longitude,
-                home_location.latitude, home_location.longitude,
-                self.cluster_radius
+                e.latitude,
+                e.longitude,
+                home_location.latitude,
+                home_location.longitude,
+                self.cluster_radius,
             )
         ]
 
@@ -77,19 +83,18 @@ class ScheduleService:
         # 找出高频时段（占比 > 15%）
         total = sum(hour_counts.values())
         peak_hours = [
-            hour for hour, count in hour_counts.items()
-            if count / total > 0.15
+            hour for hour, count in hour_counts.items() if count / total > 0.15
         ]
 
         # 判断班制类型
         schedule_type = self._classify_schedule(peak_hours)
 
         return {
-            'schedule_type': schedule_type,
-            'typical_depart_times': sorted(peak_hours),
-            'hour_distribution': dict(hour_counts),
-            'confidence': self._calculate_confidence(hour_counts),
-            'sample_size': total
+            "schedule_type": schedule_type,
+            "typical_depart_times": sorted(peak_hours),
+            "hour_distribution": dict(hour_counts),
+            "confidence": self._calculate_confidence(hour_counts),
+            "sample_size": total,
         }
 
     def _classify_schedule(self, peak_hours: List[int]) -> str:
@@ -101,20 +106,20 @@ class ScheduleService:
         弹性：时间分散
         """
         if not peak_hours:
-            return 'unknown'
+            return "unknown"
 
         avg_hour = sum(peak_hours) / len(peak_hours)
 
         # 白班判断
         if 5 <= avg_hour < 12:
-            return 'day_shift'
+            return "day_shift"
 
         # 夜班判断
         if 18 <= avg_hour or avg_hour < 3:
-            return 'night_shift'
+            return "night_shift"
 
         # 弹性/倒班
-        return 'flexible'
+        return "flexible"
 
     def _calculate_confidence(self, hour_counts: Counter) -> float:
         """计算置信度"""
@@ -130,11 +135,11 @@ class ScheduleService:
     def _default_schedule(self) -> Dict:
         """默认作息模式"""
         return {
-            'schedule_type': 'unknown',
-            'typical_depart_times': [8, 9],
-            'hour_distribution': {},
-            'confidence': 0.0,
-            'sample_size': 0
+            "schedule_type": "unknown",
+            "typical_depart_times": [8, 9],
+            "hour_distribution": {},
+            "confidence": 0.0,
+            "sample_size": 0,
         }
 
     def get_user_schedule(self, user_id: int) -> Dict:
@@ -159,7 +164,7 @@ class ScheduleService:
         arrive_time: Optional[datetime] = None,
         leave_time: Optional[datetime] = None,
         return_time: Optional[datetime] = None,
-        work_location_id: Optional[int] = None
+        work_location_id: Optional[int] = None,
     ) -> UserSchedule:
         """
         记录用户作息
@@ -183,7 +188,7 @@ class ScheduleService:
             arrive_time=arrive_time,
             leave_time=leave_time,
             return_time=return_time,
-            work_location_id=work_location_id
+            work_location_id=work_location_id,
         )
 
         self.db.add(schedule)
