@@ -3,6 +3,8 @@ CarPlay AI 智能助手 - 主应用入口
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from app.config import settings
 from app.database import init_db
 from app.routers import auth_router, events_router, locations_router, user_router
@@ -38,6 +40,15 @@ app.include_router(events_router)
 app.include_router(locations_router)
 app.include_router(user_router)
 
+# 挂载静态文件
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/", response_class=FileResponse)
+async def root():
+    """首页（注册/登录页面）"""
+    return FileResponse("static/index.html")
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -71,9 +82,9 @@ async def shutdown_event():
     logger.info("👋 服务关闭中...")
 
 
-@app.get("/")
-async def root():
-    """根路径"""
+@app.get("/api/info")
+async def api_info():
+    """API信息"""
     return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
