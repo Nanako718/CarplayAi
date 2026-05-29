@@ -32,9 +32,8 @@ class Settings(BaseSettings):
     # TTS配置（字节跳动）
     TTS_APP_ID: str = ""
     TTS_ACCESS_KEY: str = ""
-    TTS_RESOURCE_ID: str = ""
+    TTS_RESOURCE_ID: str = "seed-tts-2.0"
     TTS_DEFAULT_VOICE: str = "zh_female_cancan_mars_bigtts"
-    TTS_ENDPOINT: str = "https://openspeech.bytedance.com/api/v3/tts/unidirectional/sse"
 
     # 位置聚合配置
     LOCATION_CLUSTER_RADIUS: int = 200  # 米

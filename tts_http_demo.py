@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Project : tob_service
 # @Company : ByteDance
-# @Time    : 2026/2/27 10:00
+# @Time    : 2025/7/10 19:01
 # @Author  : SiNian
 # @FileName: TTSv3HttpDemo.py
 # @IDE: PyCharm
@@ -10,7 +10,6 @@ import requests
 import json
 import base64
 import os
-import traceback
 
 # python版本：==3.11
 
@@ -18,52 +17,11 @@ import traceback
 appID = ""
 accessKey = ""
 resourceID = ""
-
 text = "这是一段测试文本，用于测试字节大模型语音合成http单向流式接口效果。"
 # ---------------请求地址----------------------
-url = "https://openspeech.bytedance.com/api/v3/tts/unidirectional/sse"
+url = "https://openspeech.bytedance.com/api/v3/tts/unidirectional"
 
-def parse_event(stream):
-    event = {
-        "event": "",
-        "data": ""
-    }
-
-    for raw_line in stream:
-        line = raw_line.decode("utf-8").strip()
-        # 空行 = 一个完整事件结束
-        if line == "":
-            if event["data"]:
-                # 去掉最后一个换行
-                event["data"] = event["data"].rstrip("\n")
-                yield event
-            event = {
-                "id": None,
-                "event": "message",
-                "data": "",
-                "retry": None
-            }
-            continue
-
-        # 注释行（以:开头）
-        if line.startswith(":"):
-            continue
-
-        if ":" in line:
-            field, value = line.split(":", 1)
-            value = value.lstrip()
-
-            if field == "data":
-                event["data"] += value + "\n"
-            elif field == "event":
-                event["event"] = value
-
-    # 处理流结束但没有空行的情况
-    if event["data"]:
-        event["data"] = event["data"].rstrip("\n")
-        yield event
-
-def tts_http_sse_stream(url, headers, params, audio_save_path):
+def tts_http_stream(url, headers, params, audio_save_path):
     session = requests.Session()
     try:
         print('请求的url:', url)
@@ -79,11 +37,10 @@ def tts_http_sse_stream(url, headers, params, audio_save_path):
         # 用于存储音频数据
         audio_data = bytearray()
         total_audio_size = 0
-        for event_data in parse_event(response.iter_lines()):
-            if not event_data:
+        for chunk in response.iter_lines(decode_unicode=True):
+            if not chunk:
                 continue
-            print('get event', event_data['event'])
-            data = json.loads(event_data['data'])
+            data = json.loads(chunk)
 
             if data.get("code", 0) == 0 and "data" in data and data["data"]:
                 chunk_audio = base64.b64decode(data["data"])
@@ -112,7 +69,6 @@ def tts_http_sse_stream(url, headers, params, audio_save_path):
 
     except Exception as e:
         print(f"请求失败: {e}")
-        traceback.print_exc()
     finally:
         response.close()
         session.close()
@@ -146,4 +102,4 @@ if __name__ == "__main__":
         }
     }
 
-    tts_http_sse_stream(url=url, headers=headers, params=payload, audio_save_path="tts_test.mp3")
+    tts_http_stream(url=url, headers=headers, params=payload, audio_save_path="tts_test.mp3")

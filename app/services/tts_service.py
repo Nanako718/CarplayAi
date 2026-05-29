@@ -19,7 +19,7 @@ class TTSService:
         self.app_id = settings.TTS_APP_ID
         self.access_key = settings.TTS_ACCESS_KEY
         self.resource_id = settings.TTS_RESOURCE_ID
-        self.endpoint = settings.TTS_ENDPOINT
+        self.endpoint = "https://openspeech.bytedance.com/api/v3/tts/unidirectional"
         self.default_voice = settings.TTS_DEFAULT_VOICE
 
         # 音色配置
@@ -44,7 +44,7 @@ class TTSService:
         - 音频二进制数据 或 None
 
         特点：
-        - SSE流式返回
+        - HTTP Chunked流式返回
         - 不存储音频文件
         - 直接返回给客户端播放
         - 用完即销毁
@@ -74,7 +74,7 @@ class TTSService:
                 }
             }
 
-            # 调用TTS API（SSE流式）
+            # 调用TTS API（HTTP Chunked流式）
             audio_data = await self._call_tts_api(headers, payload)
 
             return audio_data
@@ -88,7 +88,7 @@ class TTSService:
         headers: dict,
         payload: dict
     ) -> Optional[bytes]:
-        """调用字节跳动TTS API（SSE流式）"""
+        """调用字节跳动TTS API（HTTP Chunked流式）"""
         audio_data = bytearray()
 
         async with httpx.AsyncClient() as client:
@@ -97,42 +97,43 @@ class TTSService:
                 self.endpoint,
                 headers=headers,
                 json=payload,
-                timeout=10.0
+                timeout=30.0
             ) as response:
                 if response.status_code != 200:
                     logger.error(f"TTS API错误：{response.status_code}")
                     return None
 
-                # 解析SSE流
+                # 解析HTTP Chunked流
                 async for line in response.aiter_lines():
                     if not line:
                         continue
 
-                    # 跳过注释
-                    if line.startswith(":"):
-                        continue
+                    try:
+                        data = json.loads(line)
 
-                    # 解析data字段
-                    if line.startswith("data:"):
-                        data_str = line[5:].strip()
-                        try:
-                            data = json.loads(data_str)
-
-                            # 成功响应
-                            if data.get("code", 0) == 0 and "data" in data:
-                                chunk = base64.b64decode(data["data"])
-                                audio_data.extend(chunk)
-
-                            # 完成响应
-                            elif data.get("code", 0) == 20000000:
-                                break
-
-                            # 错误响应
-                            elif data.get("code", 0) > 0:
-                                logger.error(f"TTS错误：{data}")
-                                return None
-
-                        except json.JSONDecodeError:
+                        # 成功响应（音频数据）
+                        if data.get("code", 0) == 0 and "data" in data and data["data"]:
+                            chunk = base64.b64decode(data["data"])
+                            audio_data.extend(chunk)
                             continue
+
+                        # 文本响应（时间戳）
+                        if data.get("code", 0) == 0 and "sentence" in data and data["sentence"]:
+                            logger.debug(f"句子数据：{data}")
+                            continue
+
+                        # 完成响应
+                        if data.get("code", 0) == 20000000:
+                            if 'usage' in data:
+                                logger.info(f"用量：{data['usage']}")
+                            break
+
+                        # 错误响应
+                        if data.get("code", 0) > 0:
+                            logger.error(f"TTS错误：{data}")
+                            return None
+
+                    except json.JSONDecodeError:
+                        continue
 
         return bytes(audio_data) if audio_data else None
