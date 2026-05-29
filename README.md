@@ -141,3 +141,4 @@ isort app/
 ## 📄 License
 
 MIT
+
