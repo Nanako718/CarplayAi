@@ -3,194 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CarPlay AI · 智能出行助手</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>CarPlay AI</title>
     <style>
-        :root {
-            --primary: #007AFF;
-            --primary-dark: #0056CC;
-            --bg: #F2F2F7;
-            --card: #FFFFFF;
-            --text: #1C1C1E;
-            --text-secondary: #8E8E93;
-            --border: #E5E5EA;
-            --success: #34C759;
-            --error: #FF3B30;
-            --radius: 12px;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        :root {
+            --blue: #007AFF;
+            --blue-light: #E8F2FF;
+            --green: #34C759;
+            --red: #FF3B30;
+            --gray-1: #8E8E93;
+            --gray-2: #AEAEB2;
+            --gray-3: #C7C7CC;
+            --gray-4: #D1D1D6;
+            --gray-5: #E5E5EA;
+            --gray-6: #F2F2F7;
+            --bg: #F2F2F7;
+            --card: #FFFFFF;
+            --text: #000000;
+            --text-secondary: #3C3C43;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
             background: var(--bg);
-            min-height: 100vh;
             color: var(--text);
-            line-height: 1.5;
-        }
-
-        .app {
-            max-width: 480px;
-            margin: 0 auto;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            overflow-x: hidden;
         }
 
-        /* Header */
-        .header {
-            padding: 60px 24px 40px;
-            text-align: center;
-            background: linear-gradient(180deg, #F2F2F7 0%, #F2F2F7 100%);
+        /* Screens */
+        .screen {
+            display: none;
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            box-shadow: 0 8px 24px rgba(0, 122, 255, 0.25);
+        .screen.active {
+            display: block;
         }
 
-        .logo svg {
-            width: 40px;
-            height: 40px;
-            fill: white;
+        /* ===== Login Screen ===== */
+        .login-screen {
+            background: var(--bg);
         }
 
-        .header h1 {
-            font-size: 28px;
+        .login-header {
+            padding: 80px 24px 40px;
+        }
+
+        .login-header h1 {
+            font-size: 34px;
             font-weight: 700;
             letter-spacing: -0.5px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
-        .header p {
-            font-size: 15px;
-            color: var(--text-secondary);
-            font-weight: 400;
+        .login-header p {
+            font-size: 17px;
+            color: var(--gray-1);
         }
 
-        /* Main Content */
-        .main {
-            flex: 1;
-            padding: 0 20px 40px;
+        .login-form {
+            padding: 0 24px;
         }
 
-        /* Tabs */
-        .tabs {
-            display: flex;
+        .input-group {
             background: var(--card);
-            border-radius: var(--radius);
-            padding: 4px;
+            border-radius: 12px;
+            overflow: hidden;
             margin-bottom: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
 
-        .tab {
-            flex: 1;
-            padding: 10px 16px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            user-select: none;
+        .input-row {
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            height: 44px;
+            border-bottom: 0.5px solid var(--gray-5);
         }
 
-        .tab.active {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+        .input-row:last-child {
+            border-bottom: none;
         }
 
-        /* Form Card */
-        .card {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        }
-
-        /* Alert */
-        .alert {
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 14px;
-            margin-bottom: 16px;
-            display: none;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .alert.show { display: flex; align-items: center; gap: 8px; }
-        .alert.success { background: #E8F9ED; color: #1B7A2B; }
-        .alert.error { background: #FDECEA; color: #C62828; }
-
-        /* Form Group */
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-wrapper input {
-            width: 100%;
-            padding: 14px 16px;
-            background: var(--bg);
-            border: 2px solid transparent;
-            border-radius: 10px;
-            font-size: 16px;
-            font-family: inherit;
+        .input-row label {
+            width: 64px;
+            font-size: 17px;
             color: var(--text);
-            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .input-row input {
+            flex: 1;
+            height: 100%;
+            border: none;
             outline: none;
+            font-size: 17px;
+            font-family: inherit;
+            background: transparent;
         }
 
-        .input-wrapper input:focus {
-            background: white;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        .input-row input::placeholder {
+            color: var(--gray-3);
         }
 
-        .input-wrapper input::placeholder {
-            color: #C7C7CC;
-        }
-
-        /* Button */
-        .btn {
+        .login-btn {
             width: 100%;
-            padding: 16px;
-            background: var(--primary);
+            height: 50px;
+            background: var(--blue);
             color: white;
             border: none;
             border-radius: 12px;
@@ -198,340 +127,555 @@
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 8px;
+            transition: opacity 0.2s;
         }
 
-        .btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        .login-btn:active {
+            opacity: 0.8;
         }
 
-        .btn:active {
-            transform: translateY(0);
+        .login-btn:disabled {
+            opacity: 0.5;
         }
 
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Token Display */
-        .token-screen {
-            display: none;
+        .login-footer {
             text-align: center;
+            margin-top: 16px;
         }
 
-        .success-icon {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, #34C759 0%, #30B350 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            box-shadow: 0 4px 16px rgba(52, 199, 89, 0.3);
-        }
-
-        .success-icon svg {
-            width: 32px;
-            height: 32px;
-            fill: white;
-        }
-
-        .token-screen h2 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .token-screen p {
-            color: var(--text-secondary);
+        .login-footer a {
+            color: var(--blue);
             font-size: 15px;
-            margin-bottom: 24px;
+            text-decoration: none;
         }
 
-        .token-box {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
+        .login-msg {
+            text-align: center;
+            font-size: 15px;
             margin-bottom: 16px;
-            word-break: break-all;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            font-size: 12px;
-            color: var(--text);
-            text-align: left;
-            max-height: 100px;
-            overflow-y: auto;
+            min-height: 22px;
         }
 
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
+        .login-msg.error { color: var(--red); }
+        .login-msg.success { color: var(--green); }
 
-        .btn-secondary {
+        /* ===== Main Screen ===== */
+        .main-screen {
             background: var(--bg);
-            color: var(--text);
-            flex: 1;
         }
 
-        .btn-secondary:hover {
-            background: var(--border);
-        }
-
-        /* Info Card */
-        .info-card {
-            background: linear-gradient(135deg, #E3F2FD 0%, #E8EAF6 100%);
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 20px;
-            text-align: left;
-        }
-
-        .info-card h4 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 12px;
+        .main-nav {
+            background: var(--card);
+            padding: 12px 24px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
+            border-bottom: 0.5px solid var(--gray-5);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        .info-card .step {
+        .main-nav h2 {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--blue);
+            font-size: 15px;
+            font-family: inherit;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .main-content {
+            padding: 20px 24px;
+        }
+
+        /* Token Card */
+        .token-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .token-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .token-card-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray-1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .token-card-header button {
+            background: none;
+            border: none;
+            color: var(--blue);
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .token-value {
+            background: var(--gray-6);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            max-height: 72px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .token-value::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: linear-gradient(transparent, var(--gray-6));
+        }
+
+        .copy-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .copy-toast.show {
+            opacity: 1;
+        }
+
+        /* Info Cards */
+        .info-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .info-card h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .info-item {
             display: flex;
             align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 10px;
-            font-size: 13px;
-            color: #37474F;
+            padding: 12px 0;
+            border-top: 0.5px solid var(--gray-5);
         }
 
-        .info-card .step:last-child {
-            margin-bottom: 0;
+        .info-item:first-of-type {
+            border-top: none;
+            padding-top: 0;
         }
 
-        .step-num {
-            width: 20px;
-            height: 20px;
-            background: var(--primary);
-            color: white;
-            border-radius: 50%;
+        .info-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
-            font-weight: 600;
+            margin-right: 12px;
             flex-shrink: 0;
-            margin-top: 1px;
+            font-size: 16px;
         }
 
-        .step code {
-            background: rgba(0, 122, 255, 0.1);
-            color: var(--primary-dark);
+        .info-icon.blue { background: var(--blue-light); }
+        .info-icon.green { background: #E8F9ED; }
+        .info-icon.orange { background: #FFF3E0; }
+
+        .info-text h4 {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .info-text p {
+            font-size: 13px;
+            color: var(--gray-1);
+            line-height: 1.4;
+        }
+
+        .info-text code {
+            background: var(--gray-6);
             padding: 2px 6px;
             border-radius: 4px;
             font-family: 'SF Mono', monospace;
             font-size: 12px;
         }
 
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 20px;
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .stat-card .label {
+            font-size: 13px;
+            color: var(--gray-1);
+            margin-bottom: 4px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .stat-card .sub {
             font-size: 12px;
-            color: var(--text-secondary);
+            color: var(--gray-2);
+            margin-top: 2px;
         }
 
-        /* Loading */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
+        /* ===== Register Screen ===== */
+        .register-screen {
+            background: var(--bg);
+        }
+
+        .register-header {
+            padding: 80px 24px 40px;
+        }
+
+        .register-header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .register-header p {
+            font-size: 17px;
+            color: var(--gray-1);
+        }
+
+        .register-form {
+            padding: 0 24px;
+        }
+
+        .register-footer {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .register-footer a {
+            color: var(--blue);
+            font-size: 15px;
+            text-decoration: none;
+        }
+
+        .register-msg {
+            text-align: center;
+            font-size: 15px;
+            margin-bottom: 16px;
+            min-height: 22px;
+        }
+
+        .register-msg.error { color: var(--red); }
+        .register-msg.success { color: var(--green); }
+
+        /* ===== Quick Actions ===== */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .action-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .action-card:active {
+            transform: scale(0.98);
+        }
+
+        .action-card .icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .action-card .title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .action-card .desc {
+            font-size: 12px;
+            color: var(--gray-1);
+        }
+
+        /* ===== Status Bar ===== */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--card);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s linear infinite;
+            background: var(--green);
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .status-text {
+            font-size: 13px;
+            color: var(--gray-1);
         }
 
-        /* Responsive */
-        @media (max-width: 380px) {
-            .header h1 { font-size: 24px; }
-            .card { padding: 20px; }
+        .status-text strong {
+            color: var(--text);
+        }
+
+        /* Bottom Safe Area */
+        .bottom-safe {
+            height: env(safe-area-inset-bottom);
         }
     </style>
 </head>
 <body>
-    <div class="app">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <svg viewBox="0 0 24 24">
-                    <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
-                </svg>
-            </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen login-screen active">
+        <div class="login-header">
             <h1>CarPlay AI</h1>
-            <p>智能出行，从这里开始</p>
-        </header>
-
-        <!-- Main Content -->
-        <main class="main">
-            <!-- Tabs -->
-            <div class="tabs">
-                <div class="tab active" data-tab="login">登录</div>
-                <div class="tab" data-tab="register">注册</div>
-            </div>
-
-            <!-- Login Form -->
-            <div id="loginCard" class="card">
-                <div id="loginAlert" class="alert"></div>
-                <div class="form-group">
+            <p>登录你的账号</p>
+        </div>
+        <div class="login-form">
+            <div id="loginMsg" class="login-msg"></div>
+            <div class="input-group">
+                <div class="input-row">
                     <label>用户名</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="loginUsername" placeholder="输入你的用户名" autocomplete="username">
-                    </div>
+                    <input type="text" id="loginUser" placeholder="请输入" autocomplete="username">
                 </div>
-                <div class="form-group">
+                <div class="input-row">
                     <label>密码</label>
-                    <div class="input-wrapper">
-                        <input type="password" id="loginPassword" placeholder="输入你的密码" autocomplete="current-password">
-                    </div>
-                </div>
-                <button class="btn" id="loginBtn" onclick="handleLogin()">登录</button>
-            </div>
-
-            <!-- Register Form -->
-            <div id="registerCard" class="card" style="display: none;">
-                <div id="registerAlert" class="alert"></div>
-                <div class="form-group">
-                    <label>用户名</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="regUsername" placeholder="3-50 个字符" autocomplete="username">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>密码</label>
-                    <div class="input-wrapper">
-                        <input type="password" id="regPassword" placeholder="至少 6 个字符" autocomplete="new-password">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>昵称 <span style="font-weight:400;color:#C7C7CC">(可选)</span></label>
-                    <div class="input-wrapper">
-                        <input type="text" id="regNickname" placeholder="给自己起个名字">
-                    </div>
-                </div>
-                <button class="btn" id="registerBtn" onclick="handleRegister()">创建账号</button>
-            </div>
-
-            <!-- Token Screen -->
-            <div id="tokenScreen" class="card token-screen">
-                <div class="success-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
-                </div>
-                <h2>欢迎使用</h2>
-                <p>你的专属 API Token：</p>
-                <div class="token-box" id="tokenValue"></div>
-
-                <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="handleLogout()">切换账号</button>
-                    <button class="btn" onclick="copyToken()">复制 Token</button>
-                </div>
-
-                <div class="info-card">
-                    <h4>📱 快捷指令配置</h4>
-                    <div class="step">
-                        <span class="step-num">1</span>
-                        <span>打开快捷指令 App，创建新指令</span>
-                    </div>
-                    <div class="step">
-                        <span class="step-num">2</span>
-                        <span>添加「获取 URL 内容」动作</span>
-                    </div>
-                    <div class="step">
-                        <span class="step-num">3</span>
-                        <span>URL 填写 <code id="apiUrl">http://IP:8000/api/v1/events</code></span>
-                    </div>
-                    <div class="step">
-                        <span class="step-num">4</span>
-                        <span>添加请求头 <code>Authorization: Bearer Token</code></span>
-                    </div>
+                    <input type="password" id="loginPass" placeholder="请输入" autocomplete="current-password">
                 </div>
             </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            CarPlay AI v1.0 · Made with ❤️
-        </footer>
+            <button class="login-btn" id="loginBtn" onclick="doLogin()">登录</button>
+            <div class="login-footer">
+                <a href="#" onclick="showRegister(); return false;">没有账号？立即注册</a>
+            </div>
+        </div>
     </div>
 
+    <!-- Register Screen -->
+    <div id="registerScreen" class="screen register-screen">
+        <div class="register-header">
+            <h1>注册</h1>
+            <p>创建你的专属账号</p>
+        </div>
+        <div class="register-form">
+            <div id="regMsg" class="register-msg"></div>
+            <div class="input-group">
+                <div class="input-row">
+                    <label>用户名</label>
+                    <input type="text" id="regUser" placeholder="3位以上" autocomplete="username">
+                </div>
+                <div class="input-row">
+                    <label>密码</label>
+                    <input type="password" id="regPass" placeholder="6位以上" autocomplete="new-password">
+                </div>
+                <div class="input-row">
+                    <label>昵称</label>
+                    <input type="text" id="regNick" placeholder="可选" autocomplete="nickname">
+                </div>
+            </div>
+            <button class="login-btn" id="regBtn" onclick="doRegister()">注册</button>
+            <div class="register-footer">
+                <a href="#" onclick="showLogin(); return false;">已有账号？返回登录</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Screen -->
+    <div id="mainScreen" class="screen main-screen">
+        <nav class="main-nav">
+            <h2>CarPlay AI</h2>
+            <button class="nav-btn" onclick="doLogout()">退出</button>
+        </nav>
+
+        <div class="main-content">
+            <!-- Status -->
+            <div class="status-bar">
+                <div class="status-dot"></div>
+                <div class="status-text">服务状态：<strong>运行中</strong></div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="label">用户ID</div>
+                    <div class="value" id="userId">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">登录状态</div>
+                    <div class="value" style="font-size: 20px; color: var(--green);">已登录</div>
+                </div>
+            </div>
+
+            <!-- Token -->
+            <div class="token-card">
+                <div class="token-card-header">
+                    <h3>API Token</h3>
+                    <button onclick="copyToken()">复制</button>
+                </div>
+                <div class="token-value" id="tokenDisplay"></div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <div class="action-card" onclick="window.open('/docs','_blank')">
+                    <div class="icon">📖</div>
+                    <div class="title">API 文档</div>
+                    <div class="desc">查看接口说明</div>
+                </div>
+                <div class="action-card" onclick="window.open('/SHORTCUT_GUIDE.md','_blank')">
+                    <div class="icon">📱</div>
+                    <div class="title">快捷指令</div>
+                    <div class="desc">配置指南</div>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="info-card">
+                <h3>快捷指令配置</h3>
+                <div class="info-item">
+                    <div class="info-icon blue">1</div>
+                    <div class="info-text">
+                        <h4>添加 HTTP 请求</h4>
+                        <p>URL: <code id="apiUrl">-</code></p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon green">2</div>
+                    <div class="info-text">
+                        <h4>设置请求头</h4>
+                        <p>Authorization: <code>Bearer {token}</code></p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon orange">3</div>
+                    <div class="info-text">
+                        <h4>设置自动化</h4>
+                        <p>CarPlay 连接时触发</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-safe"></div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="copy-toast">已复制</div>
+
     <script>
-        const API_BASE = window.location.origin;
+        const API = location.origin;
 
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
+        // Screen switching
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
 
-                const tabName = tab.dataset.tab;
-                document.getElementById('loginCard').style.display = tabName === 'login' ? 'block' : 'none';
-                document.getElementById('registerCard').style.display = tabName === 'register' ? 'block' : 'none';
-                document.getElementById('tokenScreen').style.display = 'none';
-            });
-        });
+        function showLogin() {
+            showScreen('loginScreen');
+        }
 
-        // Show alert
-        function showAlert(elementId, message, type = 'error') {
-            const alert = document.getElementById(elementId);
-            alert.textContent = message;
-            alert.className = `alert show ${type}`;
-            setTimeout(() => alert.classList.remove('show'), 3000);
+        function showRegister() {
+            showScreen('registerScreen');
+        }
+
+        function showMain(token, userId) {
+            document.getElementById('tokenDisplay').textContent = token;
+            document.getElementById('userId').textContent = userId;
+            document.getElementById('apiUrl').textContent = `${API}/api/v1/events`;
+            showScreen('mainScreen');
         }
 
         // Login
-        async function handleLogin() {
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
+        async function doLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value;
+            const msg = document.getElementById('loginMsg');
 
-            if (!username || !password) {
-                showAlert('loginAlert', '请填写用户名和密码');
-                return;
-            }
+            if (!u || !p) { msg.className = 'login-msg error'; msg.textContent = '请填写完整'; return; }
 
             const btn = document.getElementById('loginBtn');
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span>';
+            btn.textContent = '登录中...';
 
             try {
-                const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                const res = await fetch(`${API}/api/v1/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ username: u, password: p })
                 });
-
                 const data = await res.json();
 
                 if (res.ok) {
                     localStorage.setItem('token', data.access_token);
-                    showTokenScreen(data.access_token);
+                    localStorage.setItem('userId', data.user_id);
+                    showMain(data.access_token, data.user_id);
                 } else {
-                    showAlert('loginAlert', data.detail || '登录失败');
+                    msg.className = 'login-msg error';
+                    msg.textContent = data.detail || '登录失败';
                 }
             } catch (e) {
-                showAlert('loginAlert', '网络连接失败');
+                msg.className = 'login-msg error';
+                msg.textContent = '网络错误';
             } finally {
                 btn.disabled = false;
                 btn.textContent = '登录';
@@ -539,102 +683,79 @@
         }
 
         // Register
-        async function handleRegister() {
-            const username = document.getElementById('regUsername').value.trim();
-            const password = document.getElementById('regPassword').value;
-            const nickname = document.getElementById('regNickname').value.trim();
+        async function doRegister() {
+            const u = document.getElementById('regUser').value.trim();
+            const p = document.getElementById('regPass').value;
+            const n = document.getElementById('regNick').value.trim();
+            const msg = document.getElementById('regMsg');
 
-            if (!username || !password) {
-                showAlert('registerAlert', '请填写用户名和密码');
-                return;
-            }
+            if (!u || !p) { msg.className = 'register-msg error'; msg.textContent = '请填写用户名和密码'; return; }
+            if (u.length < 3) { msg.className = 'register-msg error'; msg.textContent = '用户名至少3位'; return; }
+            if (p.length < 6) { msg.className = 'register-msg error'; msg.textContent = '密码至少6位'; return; }
 
-            if (username.length < 3) {
-                showAlert('registerAlert', '用户名至少 3 个字符');
-                return;
-            }
-
-            if (password.length < 6) {
-                showAlert('registerAlert', '密码至少 6 个字符');
-                return;
-            }
-
-            const btn = document.getElementById('registerBtn');
+            const btn = document.getElementById('regBtn');
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span>';
+            btn.textContent = '注册中...';
 
             try {
-                const res = await fetch(`${API_BASE}/api/v1/auth/register`, {
+                const res = await fetch(`${API}/api/v1/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, nickname: nickname || username })
+                    body: JSON.stringify({ username: u, password: p, nickname: n || u })
                 });
-
                 const data = await res.json();
 
                 if (res.ok) {
                     localStorage.setItem('token', data.access_token);
-                    showAlert('registerAlert', '注册成功！', 'success');
-                    setTimeout(() => showTokenScreen(data.access_token), 800);
+                    localStorage.setItem('userId', data.user_id);
+                    showMain(data.access_token, data.user_id);
                 } else {
-                    showAlert('registerAlert', data.detail || '注册失败');
+                    msg.className = 'register-msg error';
+                    msg.textContent = data.detail || '注册失败';
                 }
             } catch (e) {
-                showAlert('registerAlert', '网络连接失败');
+                msg.className = 'register-msg error';
+                msg.textContent = '网络错误';
             } finally {
                 btn.disabled = false;
-                btn.textContent = '创建账号';
+                btn.textContent = '注册';
             }
         }
 
-        // Show token screen
-        function showTokenScreen(token) {
-            document.getElementById('loginCard').style.display = 'none';
-            document.getElementById('registerCard').style.display = 'none';
-            document.getElementById('tokenScreen').style.display = 'block';
-            document.getElementById('tokenValue').textContent = token;
-            document.getElementById('apiUrl').textContent = `${API_BASE}/api/v1/events`;
+        // Logout
+        function doLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            showScreen('loginScreen');
         }
 
         // Copy token
         function copyToken() {
-            const token = document.getElementById('tokenValue').textContent;
+            const token = document.getElementById('tokenDisplay').textContent;
             navigator.clipboard.writeText(token).then(() => {
-                const btn = event.target;
-                btn.textContent = '已复制 ✓';
-                btn.style.background = 'var(--success)';
-                setTimeout(() => {
-                    btn.textContent = '复制 Token';
-                    btn.style.background = '';
-                }, 2000);
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 1500);
             });
-        }
-
-        // Logout
-        function handleLogout() {
-            localStorage.removeItem('token');
-            document.getElementById('tokenScreen').style.display = 'none';
-            document.getElementById('loginCard').style.display = 'block';
-            document.querySelector('.tab[data-tab="login"]').click();
         }
 
         // Init
-        window.addEventListener('DOMContentLoaded', () => {
+        (function() {
             const token = localStorage.getItem('token');
-            if (token) {
-                showTokenScreen(token);
+            const userId = localStorage.getItem('userId');
+            if (token && userId) {
+                showMain(token, userId);
+            } else {
+                showScreen('loginScreen');
             }
-        });
+        })();
 
-        // Enter key support
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const form = input.closest('.card');
-                    if (form.id === 'loginCard') handleLogin();
-                    if (form.id === 'registerCard') handleRegister();
-                }
-            });
+        // Enter key
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Enter') return;
+            const active = document.activeElement;
+            if (active.closest('#loginScreen')) doLogin();
+            if (active.closest('#registerScreen')) doRegister();
         });
     </script>
 </body>
