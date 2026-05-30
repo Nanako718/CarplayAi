@@ -169,11 +169,8 @@ class AIBroadcastService:
             temp_high=event.get("temperature_high", "未知"),
             temp_low=event.get("temperature_low", "未知"),
             precip=event.get("precipitation_prob", "未知"),
+            location=event.get("address", "未知位置"),
         )
-
-        # 添加位置信息
-        if event.get("address"):
-            message += f"位置：{event['address']}。"
 
         return message
 
