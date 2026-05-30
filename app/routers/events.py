@@ -2,6 +2,7 @@
 事件相关API
 """
 
+import logging
 import time
 from datetime import datetime
 
@@ -19,6 +20,8 @@ from app.services.location_service import LocationService
 from app.services.scene_service import SceneService
 from app.services.tts_service import TTSService
 from app.utils.auth import get_current_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/events", tags=["事件"])
 
@@ -44,6 +47,20 @@ async def create_event(
     - text模式：JSON（包含播报文本）
     """
     start_time = time.time()
+
+    # 打印接收到的数据（调试用）
+    logger.info(f"📥 收到事件数据:")
+    logger.info(f"  event_type: {event_data.event_type}")
+    logger.info(f"  latitude: {event_data.latitude}")
+    logger.info(f"  longitude: {event_data.longitude}")
+    logger.info(f"  address: {event_data.address}")
+    logger.info(f"  weather: {event_data.weather}")
+    if event_data.weather:
+        logger.info(f"    condition: {event_data.weather.condition}")
+        logger.info(f"    temp_high: {event_data.weather.temp_high}")
+        logger.info(f"    temp_low: {event_data.weather.temp_low}")
+        logger.info(f"    precipitation_prob: {event_data.weather.precipitation_prob}")
+    logger.info(f"  timestamp: {event_data.timestamp}")
 
     # 1. 创建事件记录
     event_service = EventService(db)
