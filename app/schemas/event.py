@@ -2,19 +2,42 @@
 事件相关Schema
 """
 
+import re
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+def parse_number(value: Union[str, float, int, None]) -> Optional[float]:
+    """解析数字，支持带单位的字符串如 '32°C', '15度'"""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        # 提取数字部分
+        match = re.search(r"-?\d+\.?\d*", value)
+        if match:
+            return float(match.group())
+    return None
 
 
 class WeatherData(BaseModel):
     """天气数据"""
 
     condition: Optional[str] = Field(None, description="天气状况")
-    temp_high: Optional[float] = Field(None, description="最高温")
-    temp_low: Optional[float] = Field(None, description="最低温")
-    precipitation_prob: Optional[float] = Field(None, description="降水概率")
+    temp_high: Optional[Union[float, str]] = Field(None, description="最高温")
+    temp_low: Optional[Union[float, str]] = Field(None, description="最低温")
+    precipitation_prob: Optional[Union[float, str]] = Field(
+        None, description="降水概率"
+    )
+
+    @field_validator("temp_high", "temp_low", "precipitation_prob", mode="before")
+    @classmethod
+    def parse_temp(cls, v):
+        """解析温度，支持 '32°C' 格式"""
+        return parse_number(v)
 
 
 class EventCreate(BaseModel):
