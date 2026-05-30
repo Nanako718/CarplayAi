@@ -62,6 +62,19 @@ async def create_event(
         logger.info(f"    precipitation_prob: {event_data.weather.precipitation_prob}")
     logger.info(f"  timestamp: {event_data.timestamp}")
 
+    # 打印原始请求体（调试用）
+    import json
+
+    from fastapi import Request
+
+    try:
+        request = Request.scope.get("request")
+        if request:
+            body = await request.body()
+            logger.info(f"📦 原始请求体: {body.decode()}")
+    except:
+        pass
+
     # 1. 创建事件记录
     event_service = EventService(db)
     event = event_service.create_event(current_user, event_data)
