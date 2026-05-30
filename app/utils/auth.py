@@ -5,18 +5,15 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
 from app.models.user import User
-
-# 密码加密上下文
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Bearer Token方案
 security = HTTPBearer()
@@ -24,12 +21,16 @@ security = HTTPBearer()
 
 def get_password_hash(password: str) -> str:
     """获取密码哈希"""
-    return pwd_context.hash(password)
+    password_bytes = password.encode("utf-8")[:72]  # bcrypt 限制 72 字节
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password_bytes, salt).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """验证密码"""
-    return pwd_context.verify(plain_password, hashed_password)
+    password_bytes = plain_password.encode("utf-8")[:72]
+    hash_bytes = hashed_password.encode("utf-8")
+    return bcrypt.checkpw(password_bytes, hash_bytes)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
